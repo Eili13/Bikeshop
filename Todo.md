@@ -1,15 +1,15 @@
 # Todo List
 
 ## Product
-- [ ] Create Product
-- [ ] Read Product
-- [ ] Update Product
-- [ ] Delete Product
+- [x] Create Product
+- [x] Read Product
+- [x] Update Product
+- [x] Delete Product
 
 ## Category
-- [ ] Create Category
-- [ ] Read Category
-- [ ] Update Category
+- [x] Create Category
+- [x] Read Category
+- [x] Update Category
 - [ ] Delete Category
 
 ## User
