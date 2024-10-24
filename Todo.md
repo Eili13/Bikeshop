@@ -10,7 +10,13 @@
 - [x] Create Category
 - [x] Read Category
 - [x] Update Category
-- [ ] Delete Category
+- [x] Delete Category
+
+## Sub Category
+- [x] Create Sub Category
+- [x] Read Sub Category
+- [x] Update Sub Category
+- [x] Delete Sub Category
 
 ## User
 - [ ] Create User
