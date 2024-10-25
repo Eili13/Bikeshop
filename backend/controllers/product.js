@@ -7,8 +7,11 @@ const Category = require('../models/category'); // Ensure this import is present
 
 // Create new product
 exports.newProduct = async (req, res, next) => {
+
+    req.body.user = req.user.id;
+
     try {
-        const { name, price, category, description, seller, ratings, images, stock, numOfReviews, reviews } = req.body;
+        const { name, price, category, description, seller, ratings, images, stock, numOfReviews, reviews, user } = req.body;
         // Validate the name of the product
         if (!name) {
             return res.status(400).json({ success: false, message: 'Product name is required' });
@@ -36,7 +39,8 @@ exports.newProduct = async (req, res, next) => {
             images,
             stock,
             numOfReviews,
-            reviews
+            reviews,
+            user // Add the user field to the product
         });
 
         res.status(201).json({

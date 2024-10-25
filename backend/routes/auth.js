@@ -1,12 +1,16 @@
+// At the top of your auth.js file, add the following line if it's not already there:
+const crypto = require('crypto');
+
+// Ensure the rest of your code remains unchanged
 const express = require('express');
-const router = express.Router();    
+const router = express.Router();
 
+const { registerUser, loginUser, logout, forgotPassword, resetPassword } = require('../controllers/auth');
 
-const { registerUser, loginUser } = require('../controllers/auth');
-
-
-router.route('/register').post(registerUser);   
+router.route('/register').post(registerUser);
 router.route('/login').post(loginUser);
+router.route('/logout').get(logout);
+router.route('/password/forgot').post(forgotPassword);
+router.route('/password/reset/:token').put(resetPassword);
 
-
-module.exports = router;    
+module.exports = router;
