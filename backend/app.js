@@ -12,12 +12,15 @@ app.use(cookieParser())
 const products = require('./routes/product');
 const category = require('./routes/category');
 const auth = require('./routes/auth');  
+const order = require('./routes/order');
 // const user = require('./routes/user');
 
 // Use routes
 app.use('/api/v1', products);   
 app.use('/api/v1', category);
 app.use('/api/v1', auth);   
+app.use('/api/v1', order);
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
