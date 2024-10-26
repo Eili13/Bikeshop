@@ -21,5 +21,20 @@
 ## User
 - [x] Create User
 - [x] Read User
-- [ ] Update User
-- [ ] Delete User
+- [x] Update User
+- [x] Delete User
+
+
+## Orders
+- [x] Create Order
+- [x] Read Order
+- [x] Update Order
+- [x] Delete Order
+
+## User Reviews
+- [] Create User Review
+- [] Read User Review
+- [] Update User Review
+- [] Delete User Review
+
+
