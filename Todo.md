@@ -19,7 +19,7 @@
 - [x] Delete Sub Category
 
 ## User
-- [ ] Create User
-- [ ] Read User
+- [x] Create User
+- [x] Read User
 - [ ] Update User
 - [ ] Delete User
