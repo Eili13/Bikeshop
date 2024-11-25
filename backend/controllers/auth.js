@@ -8,6 +8,7 @@ const crypto = require('crypto');
 
 // Register user => /api/v1/register
  exports.registerUser = async (req, res, next) => {
+    console.log(req.body)
 
     const { name, email, password } = req.body;
 
@@ -27,6 +28,7 @@ const crypto = require('crypto');
 
  // Login user => /api/v1/login 
 exports.loginUser = async (req, res, next) => {
+    console.log(req.body)
     const { email, password } = req.body;
 
     // Check if email and password is entered by user

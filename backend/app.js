@@ -1,12 +1,12 @@
 const express = require('express');
 const app = express();
 const cookieParser = require('cookie-parser');
+const cors = require("cors")
 
 
+app.use(cors())
 app.use(express.json());
 app.use(cookieParser())
-
-
 
 // Import routes
 const products = require('./routes/product');
@@ -22,9 +22,9 @@ app.use('/api/v1', auth);
 app.use('/api/v1', order);
 
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+// const PORT = process.env.PORT || 4001;
+// app.listen(PORT, () => {
+//     console.log(`Server running on port ${PORT}`);
+// });
 
 module.exports = app;

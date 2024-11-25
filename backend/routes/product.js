@@ -12,10 +12,11 @@ const {
 const { isAuthenticatedUser, authorizeRoles } = require('../middleware/auth');
 
 // Apply authentication middleware to routes that require it
-router.route('/products').get(getProducts);
-router.route('/products/:id').get(getSingleProduct);
-router.route('/admin/products/new').post(isAuthenticatedUser, authorizeRoles('admin'), newProduct);
-router.route('/admin/products/:id').put(isAuthenticatedUser, authorizeRoles('admin'),  updateProduct);
-router.route('/admin/products/:id').delete(isAuthenticatedUser, authorizeRoles('admin'), deleteProduct);
+router.post('/product/', newProduct)
+router.get('/products', getProducts)
+router.get('/products/:id', getSingleProduct)
+router.put('/admin/products/:id', updateProduct)
+router.delete('/admin/products/:id', deleteProduct)
 
 module.exports = router;
+    

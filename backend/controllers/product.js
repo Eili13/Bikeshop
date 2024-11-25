@@ -8,7 +8,7 @@ const Category = require('../models/category'); // Ensure this import is present
 // Create new product
 exports.newProduct = async (req, res, next) => {
 
-    req.body.user = req.user.id;
+    req.body.user = '6743ea4208371575b986da4a';
 
     try {
         const { name, price, category, description, seller, ratings, images, stock, numOfReviews, reviews, user } = req.body;
