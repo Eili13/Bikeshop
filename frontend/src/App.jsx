@@ -53,7 +53,7 @@ import CrudUser from './pages/panel/CrudUser'
 import AllProduct from './pages/panel/AllProduct'
 import Cart from './pages/panel/Cart'
 import Order from './pages/panel/Order'
-import Profile from './pages/panel/Profile'
+
 import Charts from './pages/panel/Charts'
 // import Products from "./pages/panel/Products";
 // import Categories from "./pages/panel/Categories";
@@ -130,7 +130,6 @@ function App() {
         <Route path="/products" element={<AllProduct />} />
         <Route path="/Cart" element={<Cart />} />
         <Route path="/Order" element={<Order />} />
-        <Route path="/Profile" element={<Profile />} />
         <Route path="/charts" element={<Charts />} />
 
         

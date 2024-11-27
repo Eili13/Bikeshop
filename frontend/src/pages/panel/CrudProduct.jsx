@@ -27,7 +27,7 @@ const ProductManagement = () => {
         return;
       }
 
-      const res = await axios.get('http://localhost:4001/api/v1/products', {
+      const res = await axios.get('http://localhost:4001/api/v1/products/', {
         headers: {
           Authorization: `Bearer ${token}`  // Add token to the request header
         }

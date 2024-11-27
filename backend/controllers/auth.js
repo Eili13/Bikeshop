@@ -145,33 +145,37 @@ exports.resetPassword = async (req, res, next) => {
 
 // Get currently logged in user details => /api/v1/me
 
-exports.getUserProfile = async (req, res, next) => {
+exports.getUserProfile = async (req, res) => {
     try {
-        // Ensure that req.user exists (it should be set by the authentication middleware)
-        if (!req.user) {
+        // Log req.user to check if it's being set correctly
+        console.log("Authenticated User: ", req.user);
+
+        if (!req.user || !req.user._id) {
             return res.status(400).json({ message: 'User not authenticated' });
         }
 
-        // Find the user by the ID stored in req.user.id
-        const user = await User.findById(req.user.id);
+        // Use the ID directly from req.user
+        const userId = req.user._id;
 
-        // If no user is found, return a 404 error
+        // Find the user by the ID
+        const user = await User.findById(userId);
+
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Return the user data in the response
         res.status(200).json({
             success: true,
             user
         });
 
     } catch (error) {
-        // Handle any unexpected errors
         console.error('Error in getUserProfile:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+
 
 // Update / Change password   => /api/v1/password/update 
 exports.updatePassword = async (req, res) => {

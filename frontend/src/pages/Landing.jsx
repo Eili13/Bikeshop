@@ -14,6 +14,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Pagination
 } from "@mui/material";
 import { PedalBike, Shield, CheckCircle, Star, StarBorder } from "@mui/icons-material";
 import axios from "axios";
@@ -24,6 +25,9 @@ const Landing = () => {
   const [selectedProduct, setSelectedProduct] = useState(null); // For modal state
   const [reviews, setReviews] = useState([]); // Store reviews for the selected product
   const [open, setOpen] = useState(false); // For modal visibility
+
+  const [page, setPage] = useState(1); // Track the current page
+  const itemsPerPage = 6; // Number of items per page
 
   // Retrieve products from the API
   const retrieve = async () => {
@@ -91,6 +95,14 @@ const Landing = () => {
     }
     return stars;
   };
+
+  // Pagination: Calculate the products to display based on the current page
+  const handleChangePage = (event, value) => {
+    setPage(value);
+  };
+
+  // Get the products for the current page
+  const paginatedProducts = products.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
   return (
     <Box
@@ -165,6 +177,46 @@ const Landing = () => {
         </Button>
       </Container>
 
+      {/* Features Section */}
+      <Container maxWidth="lg" sx={{ marginTop: "4rem" }}>
+        <Typography
+          variant="h4"
+          sx={{
+            textAlign: "center",
+            fontWeight: 700,
+            marginBottom: "2rem",
+          }}
+        >
+          Our Key Features
+        </Typography>
+        <Grid container spacing={4}>
+          {features.map((feature, index) => (
+            <Grid item xs={12} sm={4} key={index}>
+              <Paper
+                sx={{
+                  padding: "2rem",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: "15px",
+                  backgroundColor: "#fff",
+                  color: "#0b192f",
+                  boxShadow: "0px 8px 15px rgba(0, 0, 0, 0.1)",
+                }}
+              >
+                <Box sx={{ marginRight: "1.5rem" }}>{feature.icon}</Box>
+                <Box>
+                  <Typography variant="h6">{feature.title}</Typography>
+                  <Typography variant="body1" sx={{ marginTop: "0.5rem" }}>
+                    {feature.description}
+                  </Typography>
+                </Box>
+              </Paper>
+            </Grid>
+          ))}
+        </Grid>
+      </Container>
+
       {/* Bike Models Section */}
       <Container maxWidth="lg" sx={{ marginTop: "4rem" }}>
         <Typography
@@ -178,7 +230,7 @@ const Landing = () => {
           Our Best-Selling Bikes
         </Typography>
         <Grid container spacing={4}>
-          {products.map((bike, index) => (
+          {paginatedProducts.map((bike, index) => (
             <Grid item xs={12} sm={6} md={4} key={index}>
               <Card
                 sx={{
@@ -214,6 +266,15 @@ const Landing = () => {
             </Grid>
           ))}
         </Grid>
+        {/* Pagination */}
+        <Box sx={{ marginTop: "2rem", display: "flex", justifyContent: "center" }}>
+          <Pagination
+            count={Math.ceil(products.length / itemsPerPage)}
+            page={page}
+            onChange={handleChangePage}
+            color="primary"
+          />
+        </Box>
       </Container>
 
       {/* Product Details Modal */}
