@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box, Typography, Button, Grid, Card, CardMedia, CardContent, Badge, IconButton
+  Box, Typography, Button, Grid, Card, CardMedia, CardContent, Badge, IconButton, Select, MenuItem, FormControl, InputLabel, Slider, Pagination
 } from '@mui/material';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'; // Import ShoppingCart icon
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 const ProductManagement = () => {
   const [products, setProducts] = useState([]);
-  const [cart, setCart] = useState([]);  // State for cart items
+  const [cart, setCart] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
-  const navigate = useNavigate();  // Initialize navigate function
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [priceRange, setPriceRange] = useState([0, 100000]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [productsPerPage] = useState(9);
+  const navigate = useNavigate();
 
   // Function to retrieve products from the API
   const retrieve = async () => {
@@ -33,17 +37,41 @@ const ProductManagement = () => {
     setCart((prevCart) => {
       const isProductInCart = prevCart.some(item => item._id === product._id);
       if (isProductInCart) {
-        // If product is already in cart, just return the existing cart
         return prevCart;
       }
-      // Add new product to cart
       return [...prevCart, { ...product }];
     });
   };
 
   // Handle click on Cart Icon to navigate to Cart Page
   const handleCartClick = () => {
-    navigate('/cart', { state: { cart } });  // Pass cart state while navigating
+    navigate('/cart', { state: { cart } });
+  };
+
+  // Handle filter changes
+  const handleCategoryChange = (e) => {
+    setCategoryFilter(e.target.value);
+  };
+
+  const handlePriceRangeChange = (event, newValue) => {
+    setPriceRange(newValue);
+  };
+
+  // Filter products based on selected category and price range
+  const filteredProducts = products.filter(product => {
+    const matchesCategory = categoryFilter ? product.category === categoryFilter : true;
+    const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1];
+    return matchesCategory && matchesPrice;
+  });
+
+  // Get current products for the page
+  const indexOfLastProduct = currentPage * productsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+  const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+
+  // Change page
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
   };
 
   return (
@@ -57,15 +85,41 @@ const ProductManagement = () => {
         </Typography>
       )}
 
+      {/* Filters */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap' }}>
+        <FormControl sx={{ minWidth: 150 }}>
+          <InputLabel>Category</InputLabel>
+          <Select
+            value={categoryFilter}
+            onChange={handleCategoryChange}
+            label="Category"
+          >
+            <MenuItem value="">All Categories</MenuItem>
+            <MenuItem value="Road Bike">Road Bike</MenuItem>
+            <MenuItem value="Mountain Bike">Mountain Bike</MenuItem>
+          </Select>
+        </FormControl>
+        <Box sx={{ minWidth: 300 }}>
+          <Typography gutterBottom>Price Range</Typography>
+          <Slider
+            value={priceRange}
+            onChange={handlePriceRangeChange}
+            valueLabelDisplay="auto"
+            min={0}
+            max={10000}
+          />
+        </Box>
+      </Box>
+
       <Grid container spacing={4}>
-        {products.length === 0 ? (
+        {currentProducts.length === 0 ? (
           <Grid item xs={12}>
             <Typography variant="h6" align="center">
               No products found
             </Typography>
           </Grid>
         ) : (
-          products.map((product, index) => (
+          currentProducts.map((product, index) => (
             <Grid item xs={12} sm={6} md={4} key={index}>
               <Card
                 sx={{
@@ -91,7 +145,6 @@ const ProductManagement = () => {
                   <Typography variant="body1" color="text.secondary">
                     ${product.price}
                   </Typography>
-                  {/* Add to Cart Button */}
                   <Button
                     variant="contained"
                     color="secondary"
@@ -106,6 +159,16 @@ const ProductManagement = () => {
           ))
         )}
       </Grid>
+
+      {/* Pagination */}
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <Pagination
+          count={Math.ceil(filteredProducts.length / productsPerPage)}
+          page={currentPage}
+          onChange={handlePageChange}
+          color="primary"
+        />
+      </Box>
 
       {/* Cart Icon with Count */}
       <Box sx={{ position: 'fixed', top: 20, right: 20 }}>

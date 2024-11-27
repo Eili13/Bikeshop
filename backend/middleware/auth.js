@@ -1,60 +1,59 @@
-const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+const jwt = require('jsonwebtoken');
 
-// Middleware to check if the user is authenticated
 exports.isAuthenticatedUser = async (req, res, next) => {
-    // Extract token from Authorization header (Bearer <token>)
-    const token = req.headers.authorization && req.headers.authorization.startsWith('Bearer ') 
-        ? req.headers.authorization.split(' ')[1] 
-        : null;
+    let token;
 
-    // Check if the token is missing
+    // Check for token in the Authorization header
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+        token = req.headers.authorization.split(' ')[1];
+    } 
+    // Fallback to token in cookies
+    else if (req.cookies.token) {
+        token = req.cookies.token;
+    }
+
+    // If no token is found, return an error
     if (!token) {
-        return res.status(401).json({
-            message: 'Login first to access this resource'
-        });
+        return res.status(401).json({ message: 'Login first to access this resource' });
     }
 
     try {
-        // Verify token with JWT secret
+        // Verify the token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // Log decoded token for debugging purposes
-        console.log('Decoded token:', decoded);
+        // Log the decoded token to check its contents
+        console.log("Decoded token:", decoded);
 
-        // Attach the user to the request object based on the token payload
-        const user = await User.findById(decoded.id);
-        if (!user) {
-            return res.status(401).json({
-                message: 'User not found or token is invalid'
-            });
+        // Attach the user to the request object
+        req.user = await User.findById(decoded.id);
+
+        // If user is not found, return an error
+        if (!req.user) {
+            return res.status(404).json({ message: 'User not found' });
         }
 
-        req.user = user;  // Attach user to req.user
-
-        // Log the user object for debugging purposes
-        console.log('Authenticated user:', req.user);
-
-        next();  // Proceed to the next middleware or route handler
+        next();
     } catch (error) {
-        // If JWT verification fails, return an error
-        console.error('JWT verification failed:', error); // Log the error for debugging
-        return res.status(401).json({
-            message: 'Invalid token or token expired',
-            error: error.message  // Return the error message for debugging
-        });
+        console.error("Error during token verification:", error);
+        return res.status(401).json({ message: 'Invalid or expired token' });
     }
 };
 
-// Middleware to check if user has the required role(s)
 exports.authorizeRoles = (...roles) => {
     return (req, res, next) => {
-        // Check if the user's role is allowed to access the resource
+        // Ensure req.user exists before checking the role
+        if (!req.user) {
+            return res.status(401).json({ message: 'User not authenticated' });
+        }
+
+        // Check if the user's role is in the allowed roles
         if (!roles.includes(req.user.role)) {
-            return res.status(403).json({
-                message: `Role (${req.user.role}) is not allowed to access this resource`
+            return res.status(403).json({ 
+                message: `Role (${req.user.role}) is not allowed to access this resource` 
             });
         }
-        next();  // Proceed to the next middleware or route handler
+
+        next();
     };
 };

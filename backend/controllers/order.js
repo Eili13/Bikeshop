@@ -2,34 +2,36 @@ const Order = require('../models/order');
 const Product = require('../models/product');
 
 // Create new order => /api/v1/order/new
-exports.newOrder = async (req, res, next) => {
-    const {
-        orderItems,
-        ShippingInfo,
-        itemsPrice,
-        taxPrice,
-        shippingPrice,
-        totalPrice,
-        paymentInfo
-    } = req.body;
+exports.newOrder = async (req, res) => {
+    try {
+        const {
+            orderItems,
+            shippingInfo,
+            paymentInfo,
+            itemPrice,
+            taxPrice,
+            shippingPrice,
+            totalPrice,
+        } = req.body;
 
-    const order = await Order.create({
-        orderItems,
-        ShippingInfo,
-        itemsPrice,
-        taxPrice,
-        shippingPrice,
-        totalPrice,
-        paymentInfo,
-        paidAt: Date.now(),
-        user: req.user.id
-    });
+        const order = new Order({
+            user: req.user.id,
+            orderItems,
+            shippingInfo,
+            paymentInfo,
+            itemPrice,
+            taxPrice,
+            shippingPrice,
+            totalPrice,
+            paidAt: Date.now(),
+        });
 
-    res.status(200).json({
-        success: true,
-        order
-    });
-}
+        await order.save();
+        res.status(201).json({ success: true, order });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
 
 // Get single order
 exports.getSingleOrder = async (req, res, next) => {

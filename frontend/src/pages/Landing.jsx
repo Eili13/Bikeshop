@@ -10,27 +10,59 @@ import {
   Card,
   CardMedia,
   CardContent,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
 } from "@mui/material";
-import { PedalBike, Shield, CheckCircle } from "@mui/icons-material";
-import axios from 'axios'
+import { PedalBike, Shield, CheckCircle, Star, StarBorder } from "@mui/icons-material";
+import axios from "axios";
 
 const Landing = () => {
   const navigate = useNavigate();
-  const [products, setProducts] = useState([])
-  const retrieve = async() => {
+  const [products, setProducts] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null); // For modal state
+  const [reviews, setReviews] = useState([]); // Store reviews for the selected product
+  const [open, setOpen] = useState(false); // For modal visibility
+
+  // Retrieve products from the API
+  const retrieve = async () => {
     try {
-      const res = await axios.get(`http://localhost:4001/api/v1/products`)
-      setProducts(res.data.products)
-    } catch(e) {
-      console.log(e)
+      const res = await axios.get(`http://localhost:4001/api/v1/products`);
+      setProducts(res.data.products);
+    } catch (e) {
+      console.log(e);
     }
-  }
+  };
+
+  // Fetch reviews for a specific product
+  const fetchReviews = async (productId) => {
+    try {
+      const res = await axios.get(`http://localhost:4001/api/v1/reviews/product/${productId}`);
+      setReviews(res.data.reviews); // Store the reviews
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
   useEffect(() => {
-    retrieve()
-  }, [])
+    retrieve();
+  }, []);
+
+  // Handle the click event for a product
+  const handleProductClick = (product) => {
+    setSelectedProduct(product);
+    fetchReviews(product._id); // Fetch reviews when a product is selected
+    setOpen(true);
+  };
+
+  // Close modal
+  const handleCloseModal = () => {
+    setOpen(false);
+  };
+
   const handleShopNowClick = () => {
-    navigate("/products"); // Navigate to login page
+    navigate("/products");
   };
 
   const features = [
@@ -51,23 +83,14 @@ const Landing = () => {
     },
   ];
 
-  const bikeModels = [
-    {
-      image: "https://via.placeholder.com/300x200", // Replace with bike image URLs
-      name: "Mountain Explorer",
-      price: "$1,299",
-    },
-    {
-      image: "https://via.placeholder.com/300x200", // Replace with bike image URLs
-      name: "Urban Commuter",
-      price: "$899",
-    },
-    {
-      image: "https://via.placeholder.com/300x200", // Replace with bike image URLs
-      name: "Road Racer",
-      price: "$1,499",
-    },
-  ];
+  // Function to render stars based on the rating
+  const renderStars = (rating) => {
+    let stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(i <= rating ? <Star key={i} sx={{ color: "#fbc02d" }} /> : <StarBorder key={i} sx={{ color: "#fbc02d" }} />);
+    }
+    return stars;
+  };
 
   return (
     <Box
@@ -121,7 +144,7 @@ const Landing = () => {
         <Button
           variant="contained"
           size="large"
-          onClick={handleShopNowClick} // Updated to navigate to /login
+          onClick={handleShopNowClick}
           sx={{
             textTransform: "none",
             fontWeight: 600,
@@ -140,80 +163,6 @@ const Landing = () => {
         >
           Shop Now
         </Button>
-      </Container>
-
-      {/* Features Section */}
-      <Container maxWidth="lg" sx={{ zIndex: 1, position: "relative" }}>
-        <Typography
-          variant="h4"
-          sx={{
-            textAlign: "center",
-            fontWeight: 700,
-            marginBottom: "2rem",
-          }}
-        >
-          Why Choose Us?
-        </Typography>
-        <Grid container spacing={4}>
-          {features.map((feature, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
-              <Paper
-                elevation={6}
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  textAlign: "center",
-                  padding: "2rem",
-                  borderRadius: "20px",
-                  background: `rgba(255, 255, 255, 0.2)`,
-                  border: "1px solid rgba(255, 255, 255, 0.3)",
-                  transition: "transform 0.3s ease",
-                  "&:hover": {
-                    transform: "scale(1.05)",
-                    boxShadow: "0px 12px 40px rgba(255, 255, 255, 0.4)",
-                  },
-                }}
-              >
-                <Box
-                  sx={{
-                    bgcolor: "#ffffff",
-                    width: "80px",
-                    height: "80px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: "50%",
-                    marginBottom: "1rem",
-                  }}
-                >
-                  {feature.icon}
-                </Box>
-                <Typography
-                  variant="h6"
-                  component="h3"
-                  sx={{
-                    fontWeight: 700,
-                    marginBottom: "1rem",
-                    color: "#ffffff",
-                    fontSize: "1.1rem",
-                  }}
-                >
-                  {feature.title}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: "rgba(255, 255, 255, 0.8)",
-                    fontSize: "1rem",
-                  }}
-                >
-                  {feature.description}
-                </Typography>
-              </Paper>
-            </Grid>
-          ))}
-        </Grid>
       </Container>
 
       {/* Bike Models Section */}
@@ -241,11 +190,12 @@ const Landing = () => {
                     transform: "scale(1.05)",
                   },
                 }}
+                onClick={() => handleProductClick(bike)} // Open modal on product click
               >
                 <CardMedia
                   component="img"
                   height="200"
-                  image={bike.images.length > 0 ? bike.images[0].url : 'https://placehold.co/600x400'}
+                  image={bike.images.length > 0 ? bike.images[0].url : "https://placehold.co/600x400"}
                   alt={bike.name}
                 />
                 <CardContent>
@@ -255,12 +205,46 @@ const Landing = () => {
                   <Typography variant="body1" color="text.secondary">
                     {bike.price}
                   </Typography>
+                  {/* Display Stars */}
+                  <Box sx={{ display: "flex", justifyContent: "center", marginTop: "1rem" }}>
+                    {renderStars(bike.rating)} {/* Assuming each product has a 'rating' property */}
+                  </Box>
                 </CardContent>
               </Card>
             </Grid>
           ))}
         </Grid>
       </Container>
+
+      {/* Product Details Modal */}
+      <Dialog open={open} onClose={handleCloseModal}>
+        <DialogTitle>{selectedProduct?.name}</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1">{selectedProduct?.description}</Typography>
+          <Typography variant="h6" sx={{ marginTop: "1rem" }}>
+            Reviews:
+          </Typography>
+          {reviews.length > 0 ? (
+            reviews.map((review, index) => (
+              <Box key={index} sx={{ marginBottom: "1rem" }}>
+                <Typography variant="body2">{review.text}</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  - {review.author}
+                </Typography>
+              </Box>
+            ))
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              No reviews yet.
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseModal} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

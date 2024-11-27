@@ -68,10 +68,17 @@ const ProductManagement = () => {
       return;
     }
 
+    // Validate form values
+    const { name, price, description, category, seller, stock, ratings, numOfReviews } = formValues;
+    if (!name || !price || !description || !category || !seller || stock < 0 || ratings < 0 || numOfReviews < 0) {
+      setErrorMessage('Please fill in all required fields with valid values');
+      return;
+    }
+
     try {
       if (editingProduct) {
         // Update product
-        const res = await axios.put(
+        await axios.put(
           `http://localhost:4001/api/v1/products/${editingProduct._id}`,
           formValues,
           { headers: { Authorization: `Bearer ${token}` } }  // Pass the token in headers
@@ -83,12 +90,12 @@ const ProductManagement = () => {
         );
       } else {
         // Add new product
-        const res = await axios.post(
+        const response = await axios.post(
           'http://localhost:4001/api/v1/product',
           formValues,
           { headers: { Authorization: `Bearer ${token}` } }  // Pass the token in headers
         );
-        setProducts((prev) => [...prev, res.data.product]);
+        setProducts((prev) => [...prev, response.data.product]);
       }
       handleCloseDialog();
     } catch (e) {
@@ -116,7 +123,7 @@ const ProductManagement = () => {
     }
 
     try {
-      await axios.delete(`http://localhost:4001/api/v1/admin/products/${id}`, {
+      await axios.delete(`http://localhost:4001/api/v1/productsss/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`  // Pass the token in headers
         }

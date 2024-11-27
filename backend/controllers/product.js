@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Product = require('../models/product'); // Ensure the correct path to your Product model
 const APIFeatures = require('../utils/apiFeatures');
 const Category = require('../models/category'); // Ensure this import is present
+const {ObjectId } = require('mongodb');
 
 
 
@@ -77,33 +78,31 @@ exports.getSingleProduct = async (req, res, next) => {
 };
 
 // Update product
-exports.updateProduct = async (req, res, next) => {
+exports.updateProduct = async (req, res) => {
     try {
-        const { category, ...productData } = req.body;
-        const product = await Product.findByIdAndUpdate(req.params.id, {
-            ...productData,
-            category: mongoose.Types.ObjectId(category)
-        }, {
-            new: true,
-            runValidators: true
-        });
-        if (!product) {
-            return res.status(404).json({
-                success: false,
-                message: 'Product not found'
-            });
-        }
-        res.status(200).json({
-            success: true,
-            product
-        });
+      const productId = new ObjectId(req.params.id); // Ensure you're correctly creating a new ObjectId
+      const updatedProduct = await Product.findByIdAndUpdate(
+        productId,
+        req.body,
+        { new: true, runValidators: true }
+      );
+  
+      if (!updatedProduct) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+  
+      res.status(200).json({
+        success: true,
+        product: updatedProduct
+      });
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error.message
-        });
+      console.error(error);
+      res.status(500).json({
+        success: false,
+        message: 'Server Error'
+      });
     }
-};
+  };
 
 // Delete product
 exports.deleteProduct = async (req, res, next) => {

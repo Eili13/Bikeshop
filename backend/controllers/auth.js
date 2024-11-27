@@ -146,13 +146,32 @@ exports.resetPassword = async (req, res, next) => {
 // Get currently logged in user details => /api/v1/me
 
 exports.getUserProfile = async (req, res, next) => {
-    const user = await User.findById(req.user.id);
+    try {
+        // Ensure that req.user exists (it should be set by the authentication middleware)
+        if (!req.user) {
+            return res.status(400).json({ message: 'User not authenticated' });
+        }
 
-    res.status(200).json({
-        success: true,
-        user
-    })
-}
+        // Find the user by the ID stored in req.user.id
+        const user = await User.findById(req.user.id);
+
+        // If no user is found, return a 404 error
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Return the user data in the response
+        res.status(200).json({
+            success: true,
+            user
+        });
+
+    } catch (error) {
+        // Handle any unexpected errors
+        console.error('Error in getUserProfile:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
 
 // Update / Change password   => /api/v1/password/update 
 exports.updatePassword = async (req, res) => {

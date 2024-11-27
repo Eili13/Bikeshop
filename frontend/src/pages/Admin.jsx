@@ -48,8 +48,11 @@ const AdminDashboard = () => {
           <ListItem button onClick={() => navigate("/crud/users")}>
             <ListItemText primary="User" />
           </ListItem>
-          <ListItem button onClick={() => navigate("/settings")}>
+          <ListItem button onClick={() => navigate("/Order")}>
             <ListItemText primary="Order" />
+          </ListItem>
+          <ListItem button onClick={() => navigate("/Charts")}>
+            <ListItemText primary="Charts" />
           </ListItem>
         </List>
       </Drawer>
