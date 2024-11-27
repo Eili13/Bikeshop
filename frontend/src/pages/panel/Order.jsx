@@ -61,7 +61,7 @@ const OrdersManagement = () => {
   const columns = [
     { field: 'id', headerName: 'Order Name', width: 150 },
     { field: 'user', headerName: 'User Name', width: 180 },
-    { field: 'address', headerName: 'Address', width: 220 },
+    { field: 'city', headerName: 'Address', width: 220 },
     { field: 'totalPrice', headerName: 'Total Price', width: 150 },
     { field: 'orderStatus', headerName: 'Status', width: 180, 
       renderCell: (params) => (

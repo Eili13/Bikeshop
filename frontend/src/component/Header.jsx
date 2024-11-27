@@ -130,7 +130,7 @@ function Header() {
                 <MenuItem
                   onClick={() => {
                     handleMenuClose();
-                    navigate("/profile");
+                    navigate("/myprofile");
                   }}
                   sx={{
                     fontSize: "1rem",
@@ -143,6 +143,26 @@ function Header() {
                 >
                   My Profile
                 </MenuItem>
+
+                {/* Show "My Orders" only for regular users */}
+                {user?.role !== "admin" && (
+                  <MenuItem
+                    onClick={() => {
+                      handleMenuClose();
+                      navigate("/myorders");
+                    }}
+                    sx={{
+                      fontSize: "1rem",
+                      fontWeight: "500",
+                      color: "#333",
+                      "&:hover": {
+                        backgroundColor: "#e3f2fd",
+                      },
+                    }}
+                  >
+                    My Orders
+                  </MenuItem>
+                )}
 
                 {user?.role === "admin" && (
                   <MenuItem

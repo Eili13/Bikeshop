@@ -147,28 +147,17 @@ exports.resetPassword = async (req, res, next) => {
 
 exports.getUserProfile = async (req, res) => {
     try {
-        // Log req.user to check if it's being set correctly
-        console.log("Authenticated User: ", req.user);
-
         if (!req.user || !req.user._id) {
             return res.status(400).json({ message: 'User not authenticated' });
         }
 
-        // Use the ID directly from req.user
-        const userId = req.user._id;
-
-        // Find the user by the ID
-        const user = await User.findById(userId);
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
+        // Respond with user details
         res.status(200).json({
             success: true,
-            user
+            name: req.user.name,
+            email: req.user.email, // Optional
+            phone: req.user.phone, // Optional
         });
-
     } catch (error) {
         console.error('Error in getUserProfile:', error);
         res.status(500).json({ message: 'Server error' });
@@ -209,24 +198,33 @@ sendToken(user, 200, res);
 // Update user profile => /api/v1/me/update
 
 exports.updateProfile = async (req, res, next) => {
-    const newUserData = {
-        name: req.body.name,
-        email: req.body.email
+    try {
+      const { name, address, password } = req.body;
+      const userId = req.user.id; // Get the authenticated user's ID from the JWT token
+  
+      const user = await User.findById(userId);
+  
+      if (!user) {
+        return res.status(404).json({ success: false, message: "User not found" });
+      }
+  
+      user.name = name || user.name;
+      user.address = address || user.address;
+  
+      if (password) {
+        user.password = password; // You might want to hash the password here before saving
+      }
+  
+      await user.save();
+  
+      res.status(200).json({
+        success: true,
+        message: "Profile updated successfully",
+      });
+    } catch (error) {
+      next(error);
     }
-
-    // Update avatar: TODO
-
-    const user = await User.findByIdAndUpdate(req.user.id, newUserData, {
-        new: true,
-        runValidators: true,
-        useFindAndModify: false
-    });
-
-    res.status(200).json({
-        success: true
-    })
-
-}
+  };
 
 // Logout user => /api/v1/logout 
 exports.logout = async (req, res, next) => {

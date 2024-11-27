@@ -53,8 +53,9 @@ import CrudUser from './pages/panel/CrudUser'
 import AllProduct from './pages/panel/AllProduct'
 import Cart from './pages/panel/Cart'
 import Order from './pages/panel/Order'
-
 import Charts from './pages/panel/Charts'
+import MyProfile from './pages/panel/MyProfile';  // Adjust this path as needed
+
 // import Products from "./pages/panel/Products";
 // import Categories from "./pages/panel/Categories";
 // import Orders from "./pages/panel/Orders";
@@ -131,6 +132,7 @@ function App() {
         <Route path="/Cart" element={<Cart />} />
         <Route path="/Order" element={<Order />} />
         <Route path="/charts" element={<Charts />} />
+        <Route path="/MyProfile" element={<MyProfile />} />
 
         
 
