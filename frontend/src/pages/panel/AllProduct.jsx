@@ -11,26 +11,33 @@ const ProductManagement = () => {
   const [cart, setCart] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
-  const [priceRange, setPriceRange] = useState([0, 100000]);
+  const [priceRange, setPriceRange] = useState([0, 1000000]);
+  const [categories, setCategories] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [productsPerPage] = useState(9);
+  const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
 
-  // Function to retrieve products from the API
-  const retrieve = async () => {
+  // Function to retrieve products from the API with pagination
+  const retrieve = async (page = 1) => {
     try {
-      const res = await axios.get('http://localhost:4001/api/v1/products');
-      setProducts(res.data.products);
+      const res = await axios.get('http://localhost:4001/api/v1/products', {
+        params: { limit: 20, page: page }, // Adjust the limit and page for pagination
+      });
+      console.log(res.data);
+
+      setProducts(res.data.products); // Set the products for the current page
+      setTotalPages(res.data.totalPages); // Set total pages for pagination
+      setCategories([...new Set(res.data.products.map(product => product.category))]); // Set categories dynamically
     } catch (e) {
       console.log(e);
       setErrorMessage('Failed to retrieve products');
     }
   };
 
-  // Fetch products when the component mounts
+  // Fetch products when the component mounts or page changes
   useEffect(() => {
-    retrieve();
-  }, []);
+    retrieve(currentPage);
+  }, [currentPage]);
 
   // Handle "Add to Cart" button click
   const handleAddToCart = (product) => {
@@ -51,10 +58,12 @@ const ProductManagement = () => {
   // Handle filter changes
   const handleCategoryChange = (e) => {
     setCategoryFilter(e.target.value);
+    setCurrentPage(1); // Reset to page 1 when category changes
   };
 
   const handlePriceRangeChange = (event, newValue) => {
     setPriceRange(newValue);
+    setCurrentPage(1); // Reset to page 1 when price range changes
   };
 
   // Filter products based on selected category and price range
@@ -64,12 +73,9 @@ const ProductManagement = () => {
     return matchesCategory && matchesPrice;
   });
 
-  // Get current products for the page
-  const indexOfLastProduct = currentPage * productsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-  const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+  console.log(filteredProducts);  // Log filtered products to ensure we're showing the right ones
 
-  // Change page
+  // Handle pagination change
   const handlePageChange = (event, value) => {
     setCurrentPage(value);
   };
@@ -95,8 +101,11 @@ const ProductManagement = () => {
             label="Category"
           >
             <MenuItem value="">All Categories</MenuItem>
-            <MenuItem value="Road Bike">Road Bike</MenuItem>
-            <MenuItem value="Mountain Bike">Mountain Bike</MenuItem>
+            {categories.map((category, index) => (
+              <MenuItem key={index} value={category}>
+                {category}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
         <Box sx={{ minWidth: 300 }}>
@@ -106,20 +115,20 @@ const ProductManagement = () => {
             onChange={handlePriceRangeChange}
             valueLabelDisplay="auto"
             min={0}
-            max={10000}
+            max={1000000}
           />
         </Box>
       </Box>
 
       <Grid container spacing={4}>
-        {currentProducts.length === 0 ? (
+        {filteredProducts.length === 0 ? (
           <Grid item xs={12}>
             <Typography variant="h6" align="center">
               No products found
             </Typography>
           </Grid>
         ) : (
-          currentProducts.map((product, index) => (
+          filteredProducts.map((product, index) => (
             <Grid item xs={12} sm={6} md={4} key={index}>
               <Card
                 sx={{
@@ -163,7 +172,7 @@ const ProductManagement = () => {
       {/* Pagination */}
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
         <Pagination
-          count={Math.ceil(filteredProducts.length / productsPerPage)}
+          count={totalPages}
           page={currentPage}
           onChange={handlePageChange}
           color="primary"

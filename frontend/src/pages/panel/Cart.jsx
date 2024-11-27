@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import {
-  Box, Typography, Grid, Card, CardMedia, CardContent, Button, Modal, Snackbar, Alert
+  Box, Typography, Grid, Card, CardMedia, CardContent, Button, Modal, Snackbar, Alert, TextField
 } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'; // Import the icon
-import axios from 'axios'; // Import axios
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 
 const CartPage = () => {
   const location = useLocation();
@@ -26,50 +25,41 @@ const CartPage = () => {
     navigate('/');
   };
 
-  const handleCheckout = async () => {
+  // Handle updating quantity in the cart
+  const handleQuantityChange = (index, event) => {
+    const newCart = [...cart];
+    const quantity = Math.max(1, Number(event.target.value)); // Ensure quantity is at least 1
+    newCart[index].quantity = quantity;
+    setCart(newCart);
+  };
+
+  // Handle order status navigation instead of checkout
+  const handleOrderStatus = async () => {
     if (cart.length === 0) {
-      setSnackbarMessage("Your cart is empty. Please add products to the cart before checking out.");
+      setSnackbarMessage("Your cart is empty. Please add products to the cart before proceeding.");
       setOpenSnackbar(true);
       return;
     }
 
+    // Check if each item has a valid productId
+    const invalidItem = cart.find(item => !item._id);
+    if (invalidItem) {
+      setSnackbarMessage(`Item "${invalidItem.name}" is missing a valid productId.`);
+      setOpenSnackbar(true);
+      return;
+    }
+
+    // Calculate total price (product price * quantity + shipping + tax)
+    const totalPrice = cart.reduce((total, item) => total + item.price * item.quantity, 0) + 10.99 + 5.99; // Example: shipping and tax
+
+    // Simulate order data (you can adjust this if you want to send it to the server)
     const orderData = {
-      user: "671a920550032448006a5bf5", // Replace with actual user ID
-      orderItems: cart.map(item => ({
-        name: item.name,
-        quantity: 1, // Assuming 1 quantity per item in cart
-        image: item.images.length > 0 ? item.images[0].url : '',
-        price: item.price,
-        product: item._id
-      })),
-      shippingInfo: {
-        address: "Blk 7 lot 4 sampaloc street.", // Replace with actual address
-        city: "Taguig City", // Replace with actual city
-        postalCode: "1630", // Replace with actual postal code
-        country: "Philippines" // Replace with actual country
-      },
-      paymentInfo: {
-        id: "pi_1F8v8JF8v8Jf8v8Jf8v8Jf8v", // Replace with actual payment ID
-        status: "Succeeded" // Replace with actual payment status
-      },
-      paidAt: new Date().toISOString(),
-      itemPrice: cart.reduce((total, item) => total + item.price, 0),
-      taxPrice: 10.99,
-      shippingPrice: 5.99,
-      totalPrice: cart.reduce((total, item) => total + item.price, 0) + 10.99 + 5.99,
       orderStatus: "Processing",
-      createdAt: new Date().toISOString()
+      totalPrice,
     };
 
-    try {
-      await axios.post('http://localhost:4001/api/v1/order', orderData);
-      setCart([]);  // Clear the cart after checkout
-      handleOpenModal();  // Open the modal after checkout
-    } catch (error) {
-      console.error(error);
-      setSnackbarMessage("Failed to process your order. Please try again.");
-      setOpenSnackbar(true);
-    }
+    // Passing order details to Order Status page
+    navigate('/OrderStatus', { state: { orderData, cart } });
   };
 
   return (
@@ -105,6 +95,15 @@ const CartPage = () => {
                   <Typography variant="body1" color="text.secondary">
                     ${product.price}
                   </Typography>
+                  {/* Quantity Input */}
+                  <TextField
+                    label="Quantity"
+                    type="number"
+                    value={product.quantity || 1}
+                    onChange={(e) => handleQuantityChange(index, e)}
+                    sx={{ mt: 2 }}
+                    inputProps={{ min: 1 }}
+                  />
                 </CardContent>
               </Card>
             </Grid>
@@ -123,10 +122,10 @@ const CartPage = () => {
         <Button
           variant="contained"
           color="secondary"
-          onClick={handleCheckout}
+          onClick={handleOrderStatus} // Change to Order Status navigation
           startIcon={<ShoppingCartIcon />} // Add the icon here
         >
-          Proceed to Checkout
+          Proceed to Your Order Status
         </Button>
       </Box>
 

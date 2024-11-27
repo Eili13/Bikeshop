@@ -4,6 +4,7 @@ import {
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 const ProductManagement = () => {
   const [products, setProducts] = useState([]);
@@ -14,9 +15,10 @@ const ProductManagement = () => {
   });
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Function to retrieve the token from localStorage
+  const navigate = useNavigate(); // Initialize useNavigate
+
   const getToken = () => {
-    return localStorage.getItem('token');  // Adjust this based on where you store your token
+    return localStorage.getItem('token');
   };
 
   const retrieveProducts = async () => {
@@ -29,7 +31,7 @@ const ProductManagement = () => {
 
       const res = await axios.get('http://localhost:4001/api/v1/products/', {
         headers: {
-          Authorization: `Bearer ${token}`  // Add token to the request header
+          Authorization: `Bearer ${token}`
         }
       });
       setProducts(res.data.products);
@@ -53,7 +55,7 @@ const ProductManagement = () => {
     setOpenDialog(false);
     setEditingProduct(null);
     setFormValues({ name: "", price: "", description: "", category: "", seller: "", stock: 0, images: [], ratings: 0, numOfReviews: 0 });
-    setErrorMessage("");  // Clear error messages when closing dialog
+    setErrorMessage("");
   };
 
   const handleFormChange = (e) => {
@@ -62,13 +64,12 @@ const ProductManagement = () => {
   };
 
   const handleSave = async () => {
-    const token = getToken(); // Retrieve the token here
+    const token = getToken();
     if (!token) {
       setErrorMessage('Login first to access this resource');
       return;
     }
 
-    // Validate form values
     const { name, price, description, category, seller, stock, ratings, numOfReviews } = formValues;
     if (!name || !price || !description || !category || !seller || stock < 0 || ratings < 0 || numOfReviews < 0) {
       setErrorMessage('Please fill in all required fields with valid values');
@@ -77,11 +78,10 @@ const ProductManagement = () => {
 
     try {
       if (editingProduct) {
-        // Update product
         await axios.put(
           `http://localhost:4001/api/v1/products/${editingProduct._id}`,
           formValues,
-          { headers: { Authorization: `Bearer ${token}` } }  // Pass the token in headers
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         setProducts((prev) =>
           prev.map((product) =>
@@ -89,11 +89,10 @@ const ProductManagement = () => {
           )
         );
       } else {
-        // Add new product
         const response = await axios.post(
           'http://localhost:4001/api/v1/product',
           formValues,
-          { headers: { Authorization: `Bearer ${token}` } }  // Pass the token in headers
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         setProducts((prev) => [...prev, response.data.product]);
       }
@@ -101,22 +100,19 @@ const ProductManagement = () => {
     } catch (e) {
       console.error(e);
       if (e.response) {
-        // Check if the error response is due to unauthorized access
         if (e.response.status === 401) {
           setErrorMessage('Unauthorized: Please login as an admin to perform this action.');
         } else {
-          // Otherwise show the message from the server response
           setErrorMessage(e.response.data.message || 'Failed to save product');
         }
       } else {
-        // Handle network or other unexpected errors
         setErrorMessage('An unexpected error occurred');
       }
     }
   };
 
   const handleDelete = async (id) => {
-    const token = getToken(); // Retrieve the token here
+    const token = getToken();
     if (!token) {
       setErrorMessage('Login first to access this resource');
       return;
@@ -125,7 +121,7 @@ const ProductManagement = () => {
     try {
       await axios.delete(`http://localhost:4001/api/v1/productsss/${id}`, {
         headers: {
-          Authorization: `Bearer ${token}`  // Pass the token in headers
+          Authorization: `Bearer ${token}`
         }
       });
       setProducts((prev) => prev.filter((product) => product._id !== id));
@@ -144,6 +140,7 @@ const ProductManagement = () => {
       <Typography variant="h4" sx={{ mb: 4, fontWeight: 'bold' }}>
         Product Management
       </Typography>
+
       {errorMessage && (
         <Typography color="error" sx={{ mb: 2 }}>
           {errorMessage}
@@ -165,13 +162,14 @@ const ProductManagement = () => {
               <TableCell>Name</TableCell>
               <TableCell>Price</TableCell>
               <TableCell>Quantity</TableCell>
+              <TableCell>Seller</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {products.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} align="center">
+                <TableCell colSpan={5} align="center">
                   No products found
                 </TableCell>
               </TableRow>
@@ -181,6 +179,7 @@ const ProductManagement = () => {
                   <TableCell>{product.name}</TableCell>
                   <TableCell>{product.price}</TableCell>
                   <TableCell>{product.stock}</TableCell>
+                  <TableCell>{product.seller}</TableCell>
                   <TableCell>
                     <IconButton color="primary" onClick={() => handleOpenDialog(product)}>
                       <Edit />
@@ -195,6 +194,16 @@ const ProductManagement = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Move Back Button below the table */}
+      <Button
+        variant="outlined"
+        color="secondary"
+        onClick={() => navigate('/admin')}
+        sx={{ mt: 4 }} // Add margin-top to separate it from the table
+      >
+        Back to Admin
+      </Button>
 
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>
@@ -262,7 +271,6 @@ const ProductManagement = () => {
               type="number"
               fullWidth
             />
-            {/* You can add an input for images here if necessary */}
           </Box>
         </DialogContent>
         <DialogActions>

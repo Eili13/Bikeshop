@@ -4,34 +4,15 @@ const Product = require('../models/product');
 // Create new order => /api/v1/order/new
 exports.newOrder = async (req, res) => {
     try {
-        const {
-            orderItems,
-            shippingInfo,
-            paymentInfo,
-            itemPrice,
-            taxPrice,
-            shippingPrice,
-            totalPrice,
-        } = req.body;
-
-        const order = new Order({
-            user: req.user.id,
-            orderItems,
-            shippingInfo,
-            paymentInfo,
-            itemPrice,
-            taxPrice,
-            shippingPrice,
-            totalPrice,
-            paidAt: Date.now(),
-        });
-
-        await order.save();
-        res.status(201).json({ success: true, order });
+      // Logic to create a new order
+      const orderData = req.body; // The data from the client side
+      const order = new Order(orderData);
+      await order.save();
+      res.status(201).json(order);
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+      res.status(500).json({ message: error.message });
     }
-};
+  };
 
 // Get single order
 exports.getSingleOrder = async (req, res, next) => {
@@ -117,6 +98,8 @@ exports.updateOrder = async (req, res, next) => {
             });
         }
 
+        
+
         order.orderStatus = req.body.status;
         order.deliveredAt = Date.now();
 
@@ -131,6 +114,7 @@ exports.updateOrder = async (req, res, next) => {
             success: false,
             message: error.message
         });
+        
     }
 };
 

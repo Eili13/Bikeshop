@@ -149,7 +149,7 @@ function Header() {
                   <MenuItem
                     onClick={() => {
                       handleMenuClose();
-                      navigate("/myorders");
+                      navigate("/OrderStatus");
                     }}
                     sx={{
                       fontSize: "1rem",

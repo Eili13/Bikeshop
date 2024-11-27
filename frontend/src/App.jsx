@@ -55,6 +55,7 @@ import Cart from './pages/panel/Cart'
 import Order from './pages/panel/Order'
 import Charts from './pages/panel/Charts'
 import MyProfile from './pages/panel/MyProfile';  // Adjust this path as needed
+import OrderStatus from './pages/panel/OrderStatus';  // Adjust this path as needed
 
 // import Products from "./pages/panel/Products";
 // import Categories from "./pages/panel/Categories";
@@ -133,6 +134,8 @@ function App() {
         <Route path="/Order" element={<Order />} />
         <Route path="/charts" element={<Charts />} />
         <Route path="/MyProfile" element={<MyProfile />} />
+        <Route path="/OrderStatus" element={<OrderStatus />} />
+        
 
         
 
