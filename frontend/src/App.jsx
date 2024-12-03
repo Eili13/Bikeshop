@@ -56,7 +56,7 @@ import Order from './pages/panel/Order'
 import Charts from './pages/panel/Charts'
 import MyProfile from './pages/panel/MyProfile';  // Adjust this path as needed
 import OrderStatus from './pages/panel/OrderStatus';  // Adjust this path as needed
-
+import Reviews from './pages/panel/reviews';  // Adjust this path as needed
 // import Products from "./pages/panel/Products";
 // import Categories from "./pages/panel/Categories";
 // import Orders from "./pages/panel/Orders";
@@ -64,7 +64,6 @@ import OrderStatus from './pages/panel/OrderStatus';  // Adjust this path as nee
 // import EditeProduct from "./pages/panel/EditeProduct";
 // import Cart from "./pages/cart/Cart";
 // import Wishlist from "./pages/panel/Wishlist";
-// import Reviews from "./pages/panel/Reviews";
 
 
 
@@ -135,6 +134,7 @@ function App() {
         <Route path="/charts" element={<Charts />} />
         <Route path="/MyProfile" element={<MyProfile />} />
         <Route path="/OrderStatus" element={<OrderStatus />} />
+        <Route path="/reviews" element={<Reviews />} />
         
 
         

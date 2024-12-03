@@ -49,7 +49,7 @@ const OrdersManagement = () => {
     }
 
     try {
-      await axios.delete(`http://localhost:4001/api/v1/orders/${id}`, {
+      await axios.delete(`http://localhost:4001/api/v1/order/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setOrders((prev) => prev.filter((order) => order._id !== id));

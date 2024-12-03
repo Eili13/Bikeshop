@@ -1,252 +1,244 @@
-// import React, { useEffect, useRef, useState } from "react";
-// import { useDispatch, useSelector } from "react-redux";
-// import {
-//   fetchMyReviews,
-//   fetchReviews,
-//   loadMoreMyReviews,
-//   loadMoreReviews,
-//   updateReview,
-// } from "../../actions/reviews";
-// import LoadingIndicator from "../../components/LoadingIndicator/LoadingIndicator";
-// import { REVIEW_STATUS, ROLES } from "../../constants/panelConstants";
-// import Rating from "@mui/material/Rating";
-// import { useIsMount } from "../../hooks/useIsMount";
+import React, { useState, useEffect } from 'react';
+import { Box, Typography, Button, TextField, List, ListItem, ListItemText, FormControl, InputLabel, Select, MenuItem, CircularProgress } from '@mui/material';
+import axios from 'axios';
 
-// function Reviews() {
-//   const dispatch = useDispatch();
-//   const isMount = useIsMount();
-//   const myDivRef = useRef();
+const ReviewSection = () => {
+  const [products, setProducts] = useState([]);  // To store products
+  const [selectedProductId, setSelectedProductId] = useState('');  // For selected product
+  const [reviews, setReviews] = useState([]); // Reviews for the selected product
+  const [newReview, setNewReview] = useState({ rating: 0, comment: '' }); // New review form
+  const [errorMessage, setErrorMessage] = useState(''); // Error messages
+  const [loading, setLoading] = useState(true); // Loading state for fetching products
+  const [editingReview, setEditingReview] = useState(null); // Review being edited
 
-//   const [Limit, setLimit] = useState(4);
-//   const [skip, setSkip] = useState(0);
-//   const [skipCounter, setSkipCounter] = useState(0);
-//   const [Reviews, setReviews] = useState([]);
-//   const [showActions, setShowActions] = useState([]);
+  // Fetch products from the server
+  const fetchProducts = async () => {
+    try {
+      const res = await axios.get('http://localhost:4001/api/v1/products');
+      setProducts(res.data.products); // Assuming the response contains the list of products
+      setLoading(false);
+    } catch (e) {
+      setErrorMessage('Failed to load products.');
+      setLoading(false);
+    }
+  };
 
-//   const toggleActionBtn = (index) => {
-//     {
-//       if (showActions.includes(index)) {
-//         const newArr = showActions.filter((item) => item !== index);
-//         setShowActions(newArr);
-//       } else {
-//         setShowActions([...showActions, index]);
-//       }
-//     }
-//   };
+  // Fetch reviews for the selected product
+  const fetchReviews = async (productId) => {
+    try {
+      const res = await axios.get(`http://localhost:4001/api/v1/productss/${productId}`);
+      console.log('Fetched reviews:', res.data.product.reviews);  // Check if reviews are returned correctly
+  
+      if (res.data.product.reviews) {
+        setReviews(res.data.product.reviews);  // Set reviews state
+      } else {
+        setReviews([]);  // No reviews available
+      }
+    } catch (e) {
+      setErrorMessage('Failed to load reviews.');
+    }
+  };
 
-//   useEffect(() => {
-//     console.log("dispatch");
-//     if (user.role === ROLES.Admin) {
-//       dispatch(fetchReviews(skip, Limit));
-//     } else {
-//       dispatch(fetchMyReviews(Limit));
-//     }
-//   }, []);
+  // Handle when a product is selected from the dropdown
+  const handleProductChange = (event) => {
+    const productId = event.target.value;
+    setSelectedProductId(productId);
+    fetchReviews(productId); // Fetch reviews for the selected product
+  };
 
-//   const AllReviews = useSelector((state) => state.review);
+  // Handle review form submission
+  const handleSubmitReview = async (event) => {
+    event.preventDefault(); // Prevent the default form submission behavior
+  
+    const { rating, comment } = newReview;
+    if (rating <= 0 || rating > 5 || !comment) {
+      setErrorMessage('Rating must be between 1 and 5 and comment is required.');
+      return;
+    }
+  
+    try {
+      const res = await axios.post(
+        'http://localhost:4001/api/v1/products/review',
+        { productId: selectedProductId, rating, comment }
+      );
+  
+      if (res.data && res.data.review) {
+        setReviews((prevReviews) => [...prevReviews, res.data.review]); // Add new review to the list
+      } else {
+        setErrorMessage('Review data is not properly structured.');
+      }
+  
+      setNewReview({ rating: 0, comment: '' }); // Reset the review form
+      setErrorMessage(''); // Clear any error messages
 
-//   const { reviews, loading } = AllReviews;
+      handleRefreshPage(); // Refresh the page after submitting the review
+    } catch (e) {
+      setErrorMessage('Failed to submit the review.');
+      console.error('Error submitting review:', e.response ? e.response.data : e); // Log error response
+    }
+  };
 
-//   useEffect(() => {
-//     setReviews(reviews);
-//   }, [reviews]);
+  // Handle updating an existing review
+  const handleUpdateReview = async (event) => {
+    event.preventDefault(); // Prevent the default form submission behavior
+    const { rating, comment } = newReview;
+  
+    if (rating <= 0 || rating > 5 || !comment) {
+      setErrorMessage('Rating must be between 1 and 5 and comment is required.');
+      return;
+    }
+  
+    try {
+        const res = await axios.put('http://localhost:4001/api/v1/products/review', {
+            productId: selectedProductId,  // Ensure this is set correctly
+            reviewId: editingReview._id,  // Ensure this is set correctly
+            rating,
+            comment,
+          });
+  
+      setReviews((prevReviews) =>
+        prevReviews.map((review) =>
+          review._id === editingReview._id ? res.data.review : review
+        )
+      );
+  
+      setNewReview({ rating: 0, comment: '' });
+      setEditingReview(null);
+      setErrorMessage('');
+  
+      handleRefreshPage(); // Refresh the page after updating the review
+    } catch (e) {
+      setErrorMessage('Failed to update the review.');
+      console.error('Error updating review:', e.response ? e.response.data : e);
+    }
+  };
 
-//   const user = useSelector((state) => state.usersSignin.userInfo.user);
+  // Handle deleting a review
+  const handleDeleteReview = async (reviewId) => {
+    try {
+      await axios.delete('http://localhost:4001/api/v1/products/review', {
+        data: { productId: selectedProductId, reviewId }
+      });
 
-//   useEffect(() => {
-//     console.log("skip");
+      setReviews((prevReviews) => prevReviews.filter((review) => review._id !== reviewId));
+    } catch (e) {
+      setErrorMessage('Failed to delete the review.');
+    }
+  };
 
-//     if (user.role === ROLES.Admin) {
-//       !isMount && dispatch(loadMoreReviews(skip, Limit));
-//     } else {
-//       !isMount && dispatch(loadMoreMyReviews(skip, Limit));
-//     }
-//   }, [skipCounter]);
+  // Handle edit review click
+  const handleEditClick = (review) => {
+    setNewReview({ rating: review.rating, comment: review.comment });
+    setEditingReview(review);  // This should set the editingReview state to the selected review
+  };
 
-//   const onLoadMore = () => {
-//     setSkip(skip + 4);
-//     setSkipCounter(skipCounter + 4);
+  // Function to refresh the page
+  const handleRefreshPage = () => {
+    window.location.reload();
+  };
 
-//     !loading &&
-//       setTimeout(function () {
-//         if (myDivRef.current) {
-//           myDivRef.current.scrollIntoView({ behavior: "smooth" });
-//           console.log("scrolled");
-//         }
-//       }, 1200);
-//   };
+  useEffect(() => {
+    fetchProducts(); // Fetch products when the component mounts
+  }, []);
 
-//   return (
-//     <div className="container grid px-2 md:px-6 mx-auto">
-//       {console.log("reviews: " + JSON.stringify(reviews))}
-//       {user.role === ROLES.Admin ? (
-//         <h1 className="my-6 text-lg font-bold text-gray-700 dark:text-gray-300">
-//           All Reviews
-//         </h1>
-//       ) : (
-//         <h1 className="my-6 text-lg font-bold text-gray-700 dark:text-gray-300">
-//           My Reviews
-//         </h1>
-//       )}
-//       {loading && Reviews.length == 0 ? (
-//         <div className="flex justify-center">
-//           <LoadingIndicator />
-//         </div>
-//       ) : (
-//         <div className="w-full overflow-hidden border border-gray-200 dark:border-gray-700 rounded-lg ring-1 ring-black ring-opacity-5 mb-8 dark:bg-gray-900">
-//           <div className="w-full overflow-x-auto">
-//             <table className="w-full whitespace-no-wrap">
-//               <thead className="text-xs  font-semibold tracking-wide text-left text-gray-500 uppercase border-b border-gray-200 dark:border-gray-700 bg-gray-100 dark:text-gray-400 dark:bg-gray-800">
-//                 <tr>
-//                   <td className="px-4 py-3">PRODUCT</td>
-//                   {user.role === ROLES.Admin && (
-//                     <td className="px-4 py-3">REVIEWER</td>
-//                   )}
-//                   <td className="px-4 py-3 w-[250px]">REVIEW</td>
-//                   <td className="px-4 py-3">DATE</td>
+  return (
+    <Box sx={{ p: 4, border: '1px solid #ccc', borderRadius: '8px' }}>
+      <Typography variant="h6" sx={{ mb: 2 }}>
+        Product Reviews
+      </Typography>
 
-//                   <td className="px-4 py-3">STATUS</td>
-//                   {user.role === ROLES.Admin && (
-//                     <td className="px-4 py-3">ACTION</td>
-//                   )}
-//                 </tr>
-//               </thead>
-//               <tbody className="bg-white divide-y divide-gray-100 dark:divide-gray-700 dark:bg-gray-800 text-gray-700 dark:text-gray-400 dark:bg-gray-900">
-//                 {Reviews &&
-//                   Reviews.map((item, index) => {
-//                     return (
-//                       <tr key={index}>
-//                         <td className="px-4 py-3 w-64">
-//                           <div className="flex items-center">
-//                             <span className="font-semibold ml-5 uppercase text-xs">
-//                               {item.product?.title}
-//                             </span>
-//                           </div>
-//                         </td>
-//                         {user.role === ROLES.Admin && (
-//                           <td className="px-4 py-3 text-xs">
-//                             <span className="text-sm">
-//                               {item.user?.firstName}
-//                             </span>
-//                           </td>
-//                         )}
-//                         <td className="px-4 py-3">
-//                           <h3 className="font-bold">{item.title}</h3>
-//                           <p>
-//                             <Rating readOnly value={item.rating} />
-//                           </p>
+      {errorMessage && (
+        <Typography color="error" sx={{ mb: 2 }}>
+          {errorMessage}
+        </Typography>
+      )}
 
-//                           <p>{item.review}</p>
-//                         </td>
-//                         <td className="px-4 py-3 text-xs">
-//                           <span className="text-sm">
-//                             {item.created.substring(0, 10)}
-//                           </span>
-//                         </td>
+      {/* Dropdown for selecting product */}
+      <FormControl fullWidth sx={{ mb: 4 }}>
+        <InputLabel id="product-select-label">Select Product</InputLabel>
+        <Select
+          labelId="product-select-label"
+          id="product-select"
+          value={selectedProductId}
+          onChange={handleProductChange}
+          label="Select Product"
+          disabled={loading}
+        >
+          {loading ? (
+            <MenuItem disabled>
+              <CircularProgress size={24} />
+            </MenuItem>
+          ) : (
+            products.map((product) => (
+              <MenuItem key={product._id} value={product._id}>
+                {product.name}
+              </MenuItem>
+            ))
+          )}
+        </Select>
+      </FormControl>
 
-//                         <td className="px-4 py-3 text-xs">
-//                           <span className="font-serif">
-//                             <span
-//                               className={` ${
-//                                 (item?.status == "Rejected" &&
-//                                   "bg-red-600 text-red-200") ||
-//                                 (item?.status == "Approved" &&
-//                                   "bg-green-800 text-green-200") ||
-//                                 (item?.status == "Pending" &&
-//                                   "bg-yellow-200 text-yellow-700")
-//                               } inline-flex px-2 text-xs font-medium leading-5 rounded-full text-green-500 bg-green-100 dark:bg-green-800 dark:text-green-100`}
-//                             >
-//                               {item?.status}
-//                             </span>
-//                           </span>
-//                         </td>
-//                         {user.role === ROLES.Admin && (
-//                           <td className="px-4 py-3 text-right flex">
-//                             <div className="relative">
-//                               <button onClick={() => toggleActionBtn(index)}>
-//                                 <svg
-//                                   class="w-6 h-6 text-gray-800 dark:text-white"
-//                                   aria-hidden="true"
-//                                   xmlns="http://www.w3.org/2000/svg"
-//                                   width="24"
-//                                   height="24"
-//                                   fill="none"
-//                                   viewBox="0 0 24 24"
-//                                 >
-//                                   <path
-//                                     stroke="currentColor"
-//                                     stroke-linecap="round"
-//                                     stroke-width="3"
-//                                     d="M12 6h.01M12 12h.01M12 18h.01"
-//                                   />
-//                                 </svg>
-//                               </button>
+      {/* Review List */}
+      {selectedProductId && (
+        <Box>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Reviews for Product {selectedProductId}
+          </Typography>
 
-//                               {showActions.includes(index) && (
-//                                 <div
-//                                   className={` absolute right-[-28px] bg-gray-100 rounded w-20 h-auto text-center`}
-//                                 >
-//                                   <ul>
-//                                     <li
-//                                       onClick={() => {
-//                                         dispatch(
-//                                           updateReview(item._id, {
-//                                             ...item,
-//                                             status: REVIEW_STATUS.Approved,
-//                                           })
-//                                         );
-//                                         toggleActionBtn(index);
-//                                       }}
-//                                       className="hover:bg-gray-50 hover:cursor-pointer p-1.5"
-//                                     >
-//                                       Approve
-//                                     </li>
-//                                     <li
-//                                       onClick={() => {
-//                                         dispatch(
-//                                           updateReview(item._id, {
-//                                             ...item,
-//                                             status: REVIEW_STATUS.Rejected,
-//                                           })
-//                                         );
-//                                         toggleActionBtn(index);
-//                                       }}
-//                                       className="hover:bg-gray-50 hover:cursor-pointer p-1.5"
-//                                     >
-//                                       Reject
-//                                     </li>
-//                                   </ul>
-//                                 </div>
-//                               )}
-//                             </div>
-//                           </td>
-//                         )}
-//                       </tr>
-//                     );
-//                   })}
-//               </tbody>
-//             </table>
+          <List sx={{ mb: 4 }}>
+            {reviews.length === 0 ? (
+              <Typography>No reviews yet. Be the first to review!</Typography>
+            ) : (
+              reviews.map((review) => (
+                <ListItem key={review._id}>
+                  <ListItemText
+                    primary={`Rating: ${review.rating}`}
+                    secondary={`Comment: ${review.comment}`}
+                  />
+                  <Button onClick={() => handleEditClick(review)} variant="contained" color="secondary" sx={{ mr: 1 }}>
+                    Edit
+                  </Button>
+                  <Button onClick={() => handleDeleteReview(review._id)} variant="outlined" color="error">
+                    Delete
+                  </Button>
+                </ListItem>
+              ))
+            )}
+          </List>
 
-//             <div ref={myDivRef} className="flex justify-center my-2">
-//               {loading && <LoadingIndicator />}
-//               {Reviews?.length >= skipCounter + 4 && (
-//                 <button onClick={onLoadMore}>
-//                   <span>load more</span>
-//                 </button>
-//               )}
-//             </div>
-//             {Reviews?.length === 0 && (
-//               <div className="flex justify-center">
-//                 <p className="text-3xl p-10 text-gray-400	">
-//                   THERE IS NOTHING HERE YET!
-//                 </p>
-//               </div>
-//             )}
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
+          {/* Review Form */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              label="Rating (1-5)"
+              value={newReview.rating}
+              onChange={(e) => {
+                const value = Math.max(1, Math.min(5, parseInt(e.target.value, 10) || 0));
+                setNewReview({ ...newReview, rating: value });
+              }}
+              fullWidth
+              type="number"
+              inputProps={{ min: 1, max: 5 }}
+            />
+            <TextField
+              label="Comment"
+              value={newReview.comment}
+              onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+              fullWidth
+              multiline
+              rows={4}
+            />
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={editingReview ? handleUpdateReview : handleSubmitReview}
+            >
+              {editingReview ? 'Update Review' : 'Submit Review'}
+            </Button>
+          </Box>
+        </Box>
+      )}
+    </Box>
+  );
+};
 
-// export default Reviews;
+export default ReviewSection;

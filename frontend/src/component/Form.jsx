@@ -60,6 +60,7 @@ function Form({ route, method }) {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    console.log({ username, email, password, confirmPassword, route: `${import.meta.env.VITE_API_URL}/register` });
 
     // Basic Validation
     if (method === "register" && (!username || !email || !password || !confirmPassword)) {
@@ -87,6 +88,8 @@ function Form({ route, method }) {
           name: username,
           email,
           password,
+          public_id: "default-avatar-public-id",
+          url: "https://example.com/default-avatar.png",
         });
         console.log("Registration successful. Redirecting to login...");
         navigate("/login");
