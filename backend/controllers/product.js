@@ -188,7 +188,7 @@ exports.addReview = async (req, res) => {
       }
   
       const review = {
-        name: req.user && req.user.name ? req.user.name : 'Anonymous',
+        name: req.user && req.user.name ? req.user.name : 'Eilizon Agcaoili',
         rating,
         comment
       };
@@ -216,40 +216,41 @@ exports.addReview = async (req, res) => {
   };
 // Update review
 exports.updateReview = async (req, res) => {
-    const { productId, reviewId, rating, comment } = req.body;
-  
-    try {
-      // Validate product ID: Check if the product exists
-      const product = await Product.findOne({ _id: productId });
-      if (!product) {
-        return res.status(404).json({ success: false, message: 'Product not found' });
-      }
-  
-      // Validate review ID: Check if the review exists for the selected product
-      const review = product.reviews.find(r => r._id.toString() === reviewId);
-      if (!review) {
-        return res.status(404).json({ success: false, message: 'Review not found' });
-      }
-  
-      // Ensure the rating is between 1 and 5 and the comment is provided
-      if (rating <= 0 || rating > 5 || !comment) {
-        return res.status(400).json({ success: false, message: 'Invalid rating or missing comment' });
-      }
-  
-      // Update the review
-      review.rating = rating;
-      review.comment = comment;
-  
-      // Save the updated product with the updated review
-      await product.save();
-  
-      // Send back the updated review
-      res.status(200).json({ success: true, review: review });
-    } catch (error) {
-      console.error("Error in updateReview:", error);
-      res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  const { productId, reviewId } = req.params;  // Get productId and reviewId from the URL
+  const { rating, comment } = req.body;  // Get the updated rating and comment from the body
+
+  try {
+    // Validate product ID: Check if the product exists
+    const product = await Product.findOne({ _id: productId });
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
     }
-  };
+
+    // Validate review ID: Check if the review exists for the selected product
+    const review = product.reviews.id(reviewId);  // Use `id()` method to find the review by its _id
+    if (!review) {
+      return res.status(404).json({ success: false, message: 'Review not found' });
+    }
+
+    // Ensure the rating is between 1 and 5 and the comment is provided
+    if (rating <= 0 || rating > 5 || !comment) {
+      return res.status(400).json({ success: false, message: 'Invalid rating or missing comment' });
+    }
+
+    // Update the review
+    review.rating = rating;
+    review.comment = comment;
+
+    // Save the updated product with the updated review
+    await product.save();
+
+    // Send back the updated review
+    res.status(200).json({ success: true, review: review });
+  } catch (error) {
+    console.error("Error in updateReview:", error);
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+};
 // Delete review
 exports.deleteReview = async (req, res) => {
     try {

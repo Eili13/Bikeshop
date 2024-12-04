@@ -21,8 +21,9 @@ router.get('/productss/:id', getSingleProduct)
 router.put('/products/:id', updateProduct)
 router.delete('/productsss/:id', deleteProduct)
 router.post('/products/review' , addReview);
-router.put('/products/review', updateReview);
 router.delete('/products/review', deleteReview);
+router.put('/products/:productId/reviews/:reviewId', updateReview);
+
 
 module.exports = router;
     

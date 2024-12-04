@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Button, TextField, List, ListItem, ListItemText, FormControl, InputLabel, Select, MenuItem, CircularProgress } from '@mui/material';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';  // Import useNavigate for routing
 
 const ReviewSection = () => {
   const [products, setProducts] = useState([]);  // To store products
@@ -10,6 +11,7 @@ const ReviewSection = () => {
   const [errorMessage, setErrorMessage] = useState(''); // Error messages
   const [loading, setLoading] = useState(true); // Loading state for fetching products
   const [editingReview, setEditingReview] = useState(null); // Review being edited
+  const navigate = useNavigate();  // Initialize the navigate hook
 
   // Fetch products from the server
   const fetchProducts = async () => {
@@ -26,7 +28,7 @@ const ReviewSection = () => {
   // Fetch reviews for the selected product
   const fetchReviews = async (productId) => {
     try {
-      const res = await axios.get(`http://localhost:4001/api/v1/productss/${productId}`);
+      const res = await axios.get(`http://localhost:4001/api/v1/productss/${productId}`); // Correct the URL here
       console.log('Fetched reviews:', res.data.product.reviews);  // Check if reviews are returned correctly
   
       if (res.data.product.reviews) {
@@ -49,25 +51,31 @@ const ReviewSection = () => {
   // Handle review form submission
   const handleSubmitReview = async (event) => {
     event.preventDefault(); // Prevent the default form submission behavior
-  
+
     const { rating, comment } = newReview;
     if (rating <= 0 || rating > 5 || !comment) {
       setErrorMessage('Rating must be between 1 and 5 and comment is required.');
       return;
     }
-  
+
     try {
+      const token = localStorage.getItem('authToken'); // Retrieve the token from local storage
       const res = await axios.post(
         'http://localhost:4001/api/v1/products/review',
-        { productId: selectedProductId, rating, comment }
+        { productId: selectedProductId, rating, comment },
+        {
+          headers: {
+            Authorization: `Bearer ${token}` // Include token in headers
+          }
+        }
       );
-  
+
       if (res.data && res.data.review) {
         setReviews((prevReviews) => [...prevReviews, res.data.review]); // Add new review to the list
       } else {
         setErrorMessage('Review data is not properly structured.');
       }
-  
+
       setNewReview({ rating: 0, comment: '' }); // Reset the review form
       setErrorMessage(''); // Clear any error messages
 
@@ -78,63 +86,61 @@ const ReviewSection = () => {
     }
   };
 
-  // Handle updating an existing review
-  const handleUpdateReview = async (event) => {
-    event.preventDefault(); // Prevent the default form submission behavior
-    const { rating, comment } = newReview;
+  // Handle edit review click
+  const handleEditClick = (review) => {
+    setNewReview({ rating: review.rating, comment: review.comment });
+    setEditingReview(review);  // Set the whole review object here
+  };
   
+  // Handle update review submission
+  const handleUpdateReview = async (event) => {
+    event.preventDefault();
+  
+    const { rating, comment } = newReview;
     if (rating <= 0 || rating > 5 || !comment) {
       setErrorMessage('Rating must be between 1 and 5 and comment is required.');
       return;
     }
   
     try {
-        const res = await axios.put('http://localhost:4001/api/v1/products/review', {
-            productId: selectedProductId,  // Ensure this is set correctly
-            reviewId: editingReview._id,  // Ensure this is set correctly
-            rating,
-            comment,
-          });
-  
-      setReviews((prevReviews) =>
-        prevReviews.map((review) =>
-          review._id === editingReview._id ? res.data.review : review
-        )
+      const token = localStorage.getItem('authToken'); // Retrieve the token from local storage
+      const res = await axios.put(
+        `http://localhost:4001/api/v1/products/${selectedProductId}/reviews/${editingReview._id}`,  // Use review._id instead of index
+        { rating, comment },
+        {
+          headers: {
+            Authorization: `Bearer ${token}` // Include token in headers
+          }
+        }
       );
   
-      setNewReview({ rating: 0, comment: '' });
-      setEditingReview(null);
-      setErrorMessage('');
+      if (res.data && res.data.review) {
+        setReviews((prevReviews) => prevReviews.map((review) =>
+          review._id === editingReview._id ? res.data.review : review
+        )); // Update the edited review in the list
+      } else {
+        setErrorMessage('Review data is not properly structured.');
+      }
+  
+      setNewReview({ rating: 0, comment: '' }); // Reset the review form
+      setEditingReview(null); // Clear editing review state
+      setErrorMessage(''); // Clear any error messages
   
       handleRefreshPage(); // Refresh the page after updating the review
     } catch (e) {
       setErrorMessage('Failed to update the review.');
-      console.error('Error updating review:', e.response ? e.response.data : e);
+      console.error('Error updating review:', e.response ? e.response.data : e); // Log error response
     }
-  };
-
-  // Handle deleting a review
-  const handleDeleteReview = async (reviewId) => {
-    try {
-      await axios.delete('http://localhost:4001/api/v1/products/review', {
-        data: { productId: selectedProductId, reviewId }
-      });
-
-      setReviews((prevReviews) => prevReviews.filter((review) => review._id !== reviewId));
-    } catch (e) {
-      setErrorMessage('Failed to delete the review.');
-    }
-  };
-
-  // Handle edit review click
-  const handleEditClick = (review) => {
-    setNewReview({ rating: review.rating, comment: review.comment });
-    setEditingReview(review);  // This should set the editingReview state to the selected review
   };
 
   // Function to refresh the page
   const handleRefreshPage = () => {
     window.location.reload();
+  };
+
+  // Function to navigate to the home page
+  const handleGoToHome = () => {
+    navigate('/');  // Navigate to the home page
   };
 
   useEffect(() => {
@@ -152,6 +158,11 @@ const ReviewSection = () => {
           {errorMessage}
         </Typography>
       )}
+
+      {/* Go to Home Button */}
+      <Button variant="outlined" color="primary" onClick={handleGoToHome} sx={{ mb: 4 }}>
+        Go to Home
+      </Button>
 
       {/* Dropdown for selecting product */}
       <FormControl fullWidth sx={{ mb: 4 }}>
@@ -197,9 +208,6 @@ const ReviewSection = () => {
                   />
                   <Button onClick={() => handleEditClick(review)} variant="contained" color="secondary" sx={{ mr: 1 }}>
                     Edit
-                  </Button>
-                  <Button onClick={() => handleDeleteReview(review._id)} variant="outlined" color="error">
-                    Delete
                   </Button>
                 </ListItem>
               ))
