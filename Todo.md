@@ -41,8 +41,8 @@
 
 
 ### Transaction with Update
-- [] Completed transaction. 10pts
-- [] Admin updates the status of the transaction. 5pts
+- [x] Completed transaction. 10pts
+- [x] Admin updates the status of the transaction. 5pts
 - [] Email the customer of the updated transaction details. 5pts
 - [] Use FCM push notifications to inform the customer of the updated transaction. 10pts
 

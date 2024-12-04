@@ -188,7 +188,7 @@ exports.addReview = async (req, res) => {
       }
   
       const review = {
-        name: req.user && req.user.name ? req.user.name : 'Anonymous',
+        name: req.user && req.user.name ? req.user.name : 'Zoneyli13',
         rating,
         comment
       };

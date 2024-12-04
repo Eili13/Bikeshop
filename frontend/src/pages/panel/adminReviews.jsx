@@ -29,7 +29,7 @@ const AdminReviews = () => {
 
     const fetchReviews = async (productId) => {
         try {
-            const response = await axios.get(`http://localhost:4001/api/v1/productss/${productId}`);
+            const response = await axios.get(`http://localhost:4001/api/v1/products/${productId}`);
             setReviews(response.data.product.reviews || []);
         } catch (error) {
             console.error('Error fetching reviews:', error);
