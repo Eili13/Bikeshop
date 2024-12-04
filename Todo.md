@@ -59,7 +59,7 @@
 
 ### MP3
 - [x] Users can write a review and rate the product/service. 10pts
-- [] Users can update their own review rating. 5pts
+- [x] Users can update their own review rating. 5pts
 - [x] Admin can delete a review. 5pts
 
 ### Unit 1

@@ -188,7 +188,7 @@ exports.addReview = async (req, res) => {
       }
   
       const review = {
-        name: req.user && req.user.name ? req.user.name : 'Eilizon Agcaoili',
+        name: req.user && req.user.name ? req.user.name : 'Anonymous',
         rating,
         comment
       };
@@ -216,8 +216,8 @@ exports.addReview = async (req, res) => {
   };
 // Update review
 exports.updateReview = async (req, res) => {
-  const { productId, reviewId } = req.params;  // Get productId and reviewId from the URL
-  const { rating, comment } = req.body;  // Get the updated rating and comment from the body
+  const { productId, reviewId } = req.params; // Extract from URL params
+  const { rating, comment } = req.body; // Extract rating and comment from the request body
 
   try {
     // Validate product ID: Check if the product exists
@@ -227,7 +227,7 @@ exports.updateReview = async (req, res) => {
     }
 
     // Validate review ID: Check if the review exists for the selected product
-    const review = product.reviews.id(reviewId);  // Use `id()` method to find the review by its _id
+    const review = product.reviews.find(r => r._id.toString() === reviewId);
     if (!review) {
       return res.status(404).json({ success: false, message: 'Review not found' });
     }

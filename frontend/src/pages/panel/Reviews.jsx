@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Button, TextField, List, ListItem, ListItemText, FormControl, InputLabel, Select, MenuItem, CircularProgress } from '@mui/material';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';  // Import useNavigate for routing
 
 const ReviewSection = () => {
   const [products, setProducts] = useState([]);  // To store products
@@ -11,7 +10,6 @@ const ReviewSection = () => {
   const [errorMessage, setErrorMessage] = useState(''); // Error messages
   const [loading, setLoading] = useState(true); // Loading state for fetching products
   const [editingReview, setEditingReview] = useState(null); // Review being edited
-  const navigate = useNavigate();  // Initialize the navigate hook
 
   // Fetch products from the server
   const fetchProducts = async () => {
@@ -28,9 +26,9 @@ const ReviewSection = () => {
   // Fetch reviews for the selected product
   const fetchReviews = async (productId) => {
     try {
-      const res = await axios.get(`http://localhost:4001/api/v1/productss/${productId}`); // Correct the URL here
-      console.log('Fetched reviews:', res.data.product.reviews);  // Check if reviews are returned correctly
-  
+      const res = await axios.get(`http://localhost:4001/api/v1/products/${productId}`);  // Corrected route
+      console.log('Fetched reviews:', res.data.product.reviews);
+    
       if (res.data.product.reviews) {
         setReviews(res.data.product.reviews);  // Set reviews state
       } else {
@@ -44,6 +42,7 @@ const ReviewSection = () => {
   // Handle when a product is selected from the dropdown
   const handleProductChange = (event) => {
     const productId = event.target.value;
+    console.log('Selected Product ID:', productId);  // Log the productId to verify
     setSelectedProductId(productId);
     fetchReviews(productId); // Fetch reviews for the selected product
   };
@@ -95,6 +94,8 @@ const ReviewSection = () => {
   // Handle update review submission
   const handleUpdateReview = async (event) => {
     event.preventDefault();
+    
+    console.log('Updating review for product ID:', selectedProductId); // Log the selectedProductId
   
     const { rating, comment } = newReview;
     if (rating <= 0 || rating > 5 || !comment) {
@@ -103,13 +104,13 @@ const ReviewSection = () => {
     }
   
     try {
-      const token = localStorage.getItem('authToken'); // Retrieve the token from local storage
+      const token = localStorage.getItem('authToken');
       const res = await axios.put(
-        `http://localhost:4001/api/v1/products/${selectedProductId}/reviews/${editingReview._id}`,  // Use review._id instead of index
+        `http://localhost:4001/api/v1/products/${selectedProductId}/reviews/${editingReview._id}`,
         { rating, comment },
         {
           headers: {
-            Authorization: `Bearer ${token}` // Include token in headers
+            Authorization: `Bearer ${token}`
           }
         }
       );
@@ -117,30 +118,22 @@ const ReviewSection = () => {
       if (res.data && res.data.review) {
         setReviews((prevReviews) => prevReviews.map((review) =>
           review._id === editingReview._id ? res.data.review : review
-        )); // Update the edited review in the list
+        ));
       } else {
         setErrorMessage('Review data is not properly structured.');
       }
   
-      setNewReview({ rating: 0, comment: '' }); // Reset the review form
-      setEditingReview(null); // Clear editing review state
-      setErrorMessage(''); // Clear any error messages
-  
-      handleRefreshPage(); // Refresh the page after updating the review
+      setNewReview({ rating: 0, comment: '' });
+      setEditingReview(null);
+      setErrorMessage('');
     } catch (e) {
       setErrorMessage('Failed to update the review.');
-      console.error('Error updating review:', e.response ? e.response.data : e); // Log error response
+      console.error('Error updating review:', e.response ? e.response.data : e);
     }
   };
-
   // Function to refresh the page
   const handleRefreshPage = () => {
     window.location.reload();
-  };
-
-  // Function to navigate to the home page
-  const handleGoToHome = () => {
-    navigate('/');  // Navigate to the home page
   };
 
   useEffect(() => {
@@ -158,11 +151,6 @@ const ReviewSection = () => {
           {errorMessage}
         </Typography>
       )}
-
-      {/* Go to Home Button */}
-      <Button variant="outlined" color="primary" onClick={handleGoToHome} sx={{ mb: 4 }}>
-        Go to Home
-      </Button>
 
       {/* Dropdown for selecting product */}
       <FormControl fullWidth sx={{ mb: 4 }}>
