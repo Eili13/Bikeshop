@@ -181,7 +181,7 @@ const ReviewSection = () => {
       {selectedProductId && (
         <Box>
           <Typography variant="h6" sx={{ mb: 2 }}>
-            Reviews for Product {selectedProductId}
+            Reviews for Product: {selectedProductId}
           </Typography>
 
           <List sx={{ mb: 4 }}>
