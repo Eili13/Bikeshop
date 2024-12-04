@@ -111,6 +111,11 @@ const Landing = () => {
     navigate("/cart", { state: { cart } }); // Redirect to /cart page with cart state
   };
 
+  // Navigate to the reviews page
+  const goToReviews = (product) => {
+    navigate("/reviews", { state: { productId: product._id } }); // Navigate to reviews page with the product ID
+  };
+
   // Run the `retrieve` function when the component mounts
   useEffect(() => {
     retrieve();
@@ -225,14 +230,33 @@ const Landing = () => {
                   <Typography variant="body2" sx={{ marginTop: "1rem", color: "#ffffff" }}>
                     Price: ${product.price}
                   </Typography>
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    sx={{ marginTop: "1rem" }}
-                    onClick={() => addToCart(product)} // Add product to the cart
-                  >
-                    Add to Cart
-                  </Button>
+
+                  {/* Buttons Section */}
+                  <Grid container spacing={2} direction="column" sx={{ marginTop: "1rem" }}>
+                    {/* Add to Cart Button */}
+                    <Grid item>
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        sx={{ width: "100%" }}
+                        onClick={() => addToCart(product)} // Add product to the cart
+                      >
+                        Add to Cart
+                      </Button>
+                    </Grid>
+
+                    {/* Add Review Button */}
+                    <Grid item>
+                      <Button
+                        variant="outlined"
+                        color="secondary"
+                        sx={{ width: "100%" }}
+                        onClick={() => goToReviews(product)} // Navigate to the review page
+                      >
+                        Add Review
+                      </Button>
+                    </Grid>
+                  </Grid>
                 </Box>
               </Box>
             </Grid>
