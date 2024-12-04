@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const upload = require('../middleware/upload');
 
 
 const {
@@ -16,7 +17,7 @@ const {
 const { isAuthenticatedUser, authorizeRoles } = require('../middleware/auth');
 
 // Apply authentication middleware to routes that require it
-router.post('/products/', newProduct);
+router.post('/product', upload.array('images'), newProduct);
 router.get('/products', getProducts);
 router.get('/products/:id', getSingleProduct);  // Corrected route
 router.put('/products/:id', updateProduct);

@@ -4,7 +4,7 @@ import {
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
 
 const ProductManagement = () => {
   const [products, setProducts] = useState([]);
@@ -15,7 +15,7 @@ const ProductManagement = () => {
   });
   const [errorMessage, setErrorMessage] = useState("");
 
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
 
   const getToken = () => {
     return localStorage.getItem('token');
@@ -59,8 +59,13 @@ const ProductManagement = () => {
   };
 
   const handleFormChange = (e) => {
-    const { name, value } = e.target;
-    setFormValues((prev) => ({ ...prev, [name]: value }));
+    const { name, value, files } = e.target;
+
+    if (name === 'images') {
+      setFormValues((prev) => ({ ...prev, [name]: files })); // Handle file input
+    } else {
+      setFormValues((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSave = async () => {
@@ -70,18 +75,34 @@ const ProductManagement = () => {
       return;
     }
 
-    const { name, price, description, category, seller, stock, ratings, numOfReviews } = formValues;
+    const { name, price, description, category, seller, stock, ratings, numOfReviews, images } = formValues;
     if (!name || !price || !description || !category || !seller || stock < 0 || ratings < 0 || numOfReviews < 0) {
       setErrorMessage('Please fill in all required fields with valid values');
       return;
     }
 
     try {
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('price', price);
+      formData.append('description', description);
+      formData.append('category', category);
+      formData.append('seller', seller);
+      formData.append('stock', stock);
+      formData.append('ratings', ratings);
+      formData.append('numOfReviews', numOfReviews);
+
+      if (images && images.length > 0) {
+        for (let i = 0; i < images.length; i++) {
+          formData.append('images', images[i]);
+        }
+      }
+
       if (editingProduct) {
         await axios.put(
           `http://localhost:4001/api/v1/products/${editingProduct._id}`,
-          formValues,
-          { headers: { Authorization: `Bearer ${token}` } }
+          formData,
+          { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
         );
         setProducts((prev) =>
           prev.map((product) =>
@@ -91,8 +112,8 @@ const ProductManagement = () => {
       } else {
         const response = await axios.post(
           'http://localhost:4001/api/v1/product',
-          formValues,
-          { headers: { Authorization: `Bearer ${token}` } }
+          formData,
+          { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
         );
         setProducts((prev) => [...prev, response.data.product]);
       }
@@ -119,7 +140,7 @@ const ProductManagement = () => {
     }
 
     try {
-      await axios.delete(`http://localhost:4001/api/v1/productsss/${id}`, {
+      await axios.delete(`http://localhost:4001/api/v1/products/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -156,127 +177,162 @@ const ProductManagement = () => {
         Add Product
       </Button>
       <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Price</TableCell>
-              <TableCell>Quantity</TableCell>
-              <TableCell>Seller</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {products.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} align="center">
-                  No products found
-                </TableCell>
-              </TableRow>
-            ) : (
-              products.map((product) => (
-                <TableRow key={product._id}>
-                  <TableCell>{product.name}</TableCell>
-                  <TableCell>{product.price}</TableCell>
-                  <TableCell>{product.stock}</TableCell>
-                  <TableCell>{product.seller}</TableCell>
-                  <TableCell>
-                    <IconButton color="primary" onClick={() => handleOpenDialog(product)}>
-                      <Edit />
-                    </IconButton>
-                    <IconButton color="error" onClick={() => handleDelete(product._id)}>
-                      <Delete />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+  <Table>
+    <TableHead>
+      <TableRow>
+        <TableCell>Name</TableCell>
+        <TableCell>Price</TableCell>
+        <TableCell>Quantity</TableCell>
+        <TableCell>Seller</TableCell>
+        <TableCell>Image</TableCell> {/* New column for images */}
+        <TableCell>Actions</TableCell>
+      </TableRow>
+    </TableHead>
+    <TableBody>
+  {products.length === 0 ? (
+    <TableRow>
+      <TableCell colSpan={6} align="center">
+        No products found
+      </TableCell>
+    </TableRow>
+  ) : (
+    products.map((product) => (
+      <TableRow key={product._id}>
+        <TableCell>{product.name}</TableCell>
+        <TableCell>{product.price}</TableCell>
+        <TableCell>{product.stock}</TableCell>
+        <TableCell>{product.seller}</TableCell>
 
-      {/* Move Back Button below the table */}
+        {/* New cell for displaying the image */}
+        <TableCell>
+  {product.images && product.images.length > 0 ? (
+    <img 
+    src={`http://localhost:4001/uploads/${product.images[0].filename}`} // Adjust the path if necessary
+    // Make sure this path is correct
+      alt={product.name} 
+      style={{ width: '50px', height: '50px', objectFit: 'cover' }} 
+    />
+  ) : (
+    <span>No Image</span>
+  )}
+</TableCell>
+
+        <TableCell>
+          <IconButton color="primary" onClick={() => handleOpenDialog(product)}>
+            <Edit />
+          </IconButton>
+          <IconButton color="error" onClick={() => handleDelete(product._id)}>
+            <Delete />
+          </IconButton>
+        </TableCell>
+      </TableRow>
+    ))
+  )}
+</TableBody>
+  </Table>
+</TableContainer>
+
+
       <Button
         variant="outlined"
         color="secondary"
         onClick={() => navigate('/admin')}
-        sx={{ mt: 4 }} // Add margin-top to separate it from the table
+        sx={{ mt: 4 }}
       >
-        Back to Admin
+        Back to Admin Dashboard
       </Button>
 
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {editingProduct ? 'Edit Product' : 'Add Product'}
-        </DialogTitle>
+      {/* Product Form Dialog */}
+      <Dialog open={openDialog} onClose={handleCloseDialog}>
+        <DialogTitle>{editingProduct ? 'Edit Product' : 'Add Product'}</DialogTitle>
         <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
-            <TextField
-              label="Name"
-              name="name"
-              value={formValues.name}
-              onChange={handleFormChange}
-              fullWidth
-            />
-            <TextField
-              label="Price"
-              name="price"
-              value={formValues.price}
-              onChange={handleFormChange}
-              type="number"
-              fullWidth
-            />
-            <TextField
-              label="Description"
-              name="description"
-              value={formValues.description}
-              onChange={handleFormChange}
-              fullWidth
-            />
-            <TextField
-              label="Category"
-              name="category"
-              value={formValues.category}
-              onChange={handleFormChange}
-              fullWidth
-            />
-            <TextField
-              label="Seller"
-              name="seller"
-              value={formValues.seller}
-              onChange={handleFormChange}
-              fullWidth
-            />
-            <TextField
-              label="Stock"
-              name="stock"
-              value={formValues.stock}
-              onChange={handleFormChange}
-              type="number"
-              fullWidth
-            />
-            <TextField
-              label="Ratings"
-              name="ratings"
-              value={formValues.ratings}
-              onChange={handleFormChange}
-              type="number"
-              fullWidth
-            />
-            <TextField
-              label="Number of Reviews"
-              name="numOfReviews"
-              value={formValues.numOfReviews}
-              onChange={handleFormChange}
-              type="number"
-              fullWidth
-            />
-          </Box>
+          {errorMessage && (
+            <Typography color="error" sx={{ mb: 2 }}>
+              {errorMessage}
+            </Typography>
+          )}
+          <TextField
+            fullWidth
+            label="Product Name"
+            name="name"
+            value={formValues.name}
+            onChange={handleFormChange}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label="Price"
+            name="price"
+            type="number"
+            value={formValues.price}
+            onChange={handleFormChange}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label="Description"
+            name="description"
+            value={formValues.description}
+            onChange={handleFormChange}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label="Category"
+            name="category"
+            value={formValues.category}
+            onChange={handleFormChange}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label="Seller"
+            name="seller"
+            value={formValues.seller}
+            onChange={handleFormChange}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label="Stock"
+            name="stock"
+            type="number"
+            value={formValues.stock}
+            onChange={handleFormChange}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label="Ratings"
+            name="ratings"
+            type="number"
+            value={formValues.ratings}
+            onChange={handleFormChange}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label="Number of Reviews"
+            name="numOfReviews"
+            type="number"
+            value={formValues.numOfReviews}
+            onChange={handleFormChange}
+            sx={{ mb: 2 }}
+          />
+          <input
+            type="file"
+            name="images"
+            multiple
+            onChange={handleFormChange}
+            style={{ marginBottom: '16px' }}
+          />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSave} variant="contained" color="primary">
-            Save
+          <Button onClick={handleCloseDialog} color="secondary">
+            Cancel
+          </Button>
+          <Button onClick={handleSave} color="primary">
+            {editingProduct ? 'Update' : 'Save'}
           </Button>
         </DialogActions>
       </Dialog>

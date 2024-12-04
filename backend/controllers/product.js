@@ -3,57 +3,70 @@ const Product = require('../models/product'); // Ensure the correct path to your
 const APIFeatures = require('../utils/apiFeatures');
 const Category = require('../models/category'); // Ensure this import is present
 const {ObjectId } = require('mongodb');
-
+const upload = require('../middleware/upload');
+const Filter = require('bad-words');
 
 
 // Create new product
 exports.newProduct = async (req, res, next) => {
+  // For this example, assuming user is set manually, this should be set based on authenticated user
+  req.body.user = '674a09c5a4eaeacd5f60a5d5'; 
 
-    req.body.user = '674a09c5a4eaeacd5f60a5d5';
+  try {
+    const { name, price, category, description, seller, ratings, stock, numOfReviews, reviews, user } = req.body;
 
-    try {
-        const { name, price, category, description, seller, ratings, images, stock, numOfReviews, reviews, user } = req.body;
-        // Validate the name of the product
-        if (!name) {
-            return res.status(400).json({ success: false, message: 'Product name is required' });
-        }
-
-        // Validate the category name
-        if (!category) {
-            return res.status(400).json({ success: false, message: 'Category name is required' });
-        }
-
-        // Check if the category name exists in the Categories collection
-        const categoryDoc = await Category.findOne({ name: category });
-        if (!categoryDoc) {
-            return res.status(400).json({ success: false, message: 'Invalid category name' });
-        }
-
-        // Create a new product
-        const product = await Product.create({
-            name,
-            price,
-            category: categoryDoc.name, // Use the category name from the Category document
-            description,
-            seller,
-            ratings,
-            images,
-            stock,
-            numOfReviews,
-            reviews,
-            user // Add the user field to the product
-        });
-
-        res.status(201).json({
-            success: true,
-            product
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+    // Validate the name of the product
+    if (!name) {
+      return res.status(400).json({ success: false, message: 'Product name is required' });
     }
+
+    // Validate the category name
+    if (!category) {
+      return res.status(400).json({ success: false, message: 'Category name is required' });
+    }
+
+    // Check if the category name exists in the Categories collection
+    const categoryDoc = await Category.findOne({ name: category });
+    if (!categoryDoc) {
+      return res.status(400).json({ success: false, message: 'Invalid category name' });
+    }
+
+    // Check if files are uploaded
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ success: false, message: 'At least one image is required' });
+    }
+
+    // Handle uploaded images
+    const imagePaths = req.files.map(file => ({
+      path: `/uploads/${file.filename}`,
+    }));
+
+    // Create a new product
+    const product = await Product.create({
+      name,
+      price,
+      category: categoryDoc.name,
+      description,
+      seller,
+      ratings,
+      images: imagePaths, // Save uploaded image paths
+      stock,
+      numOfReviews,
+      reviews,
+      user,
+    });
+
+    res.status(201).json({
+      success: true,
+      product,
+    });
+  } catch (error) {
+    console.error('Error creating product:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
 
 
@@ -166,54 +179,67 @@ exports.getProducts = async (req, res, next) => {
 
 
 exports.addReview = async (req, res) => {
-    try {
-      const { productId, rating, comment } = req.body;
-      
-      // Log incoming request data
-      console.log('Request body:', req.body);
-  
-      if (!rating || !comment) {
-        return res.status(400).json({
-          success: false,
-          message: 'Rating and comment are required'
-        });
-      }
-  
-      const product = await Product.findById(productId);
-      if (!product) {
-        return res.status(404).json({
-          success: false,
-          message: 'Product not found'
-        });
-      }
-  
-      const review = {
-        name: req.user && req.user.name ? req.user.name : 'Zoneyli13',
-        rating,
-        comment
-      };
-  
-      product.reviews.push(review);
-      product.numOfReviews = product.reviews.length;
-  
-      const totalRatings = product.reviews.reduce((acc, review) => acc + review.rating, 0);
-      product.ratings = totalRatings / product.reviews.length;
-  
-      await product.save();
-  
-      res.status(200).json({
-        success: true,
-        message: 'Review added successfully',
-        product
-      });
-    } catch (error) {
-      console.error('Error in addReview:', error); // Log the error for more info
-      res.status(500).json({
+  try {
+    const { productId, rating, comment } = req.body;
+
+    // Log incoming request data
+    console.log('Request body:', req.body);
+
+    if (!rating || !comment) {
+      return res.status(400).json({
         success: false,
-        message: error.message
+        message: 'Rating and comment are required'
       });
     }
-  };
+
+    // Initialize the bad-words filter
+    const filter = new Filter();
+
+    // Add custom bad word if necessary
+    filter.addWords('badword');  // Add your specific bad word here
+
+    // Clean the comment by removing any unwanted characters first
+    const cleanedComment = comment.trim().replace(/[^\w\s]/gi, ''); // Remove punctuation
+    const cleanComment = filter.clean(cleanedComment);  // Clean the comment
+
+    console.log('Original Comment:', comment);
+    console.log('Cleaned Comment:', cleanComment);
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
+    }
+
+    const review = {
+      name: req.user && req.user.name ? req.user.name : 'Zoneyli13',
+      rating,
+      comment: cleanComment // Use the cleaned comment
+    };
+
+    product.reviews.push(review);
+    product.numOfReviews = product.reviews.length;
+
+    const totalRatings = product.reviews.reduce((acc, review) => acc + review.rating, 0);
+    product.ratings = totalRatings / product.reviews.length;
+
+    await product.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Review added successfully',
+      product
+    });
+  } catch (error) {
+    console.error('Error in addReview:', error); // Log the error for more info
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
 // Update review
 exports.updateReview = async (req, res) => {
   const { productId, reviewId } = req.params; // Extract from URL params

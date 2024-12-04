@@ -1,21 +1,18 @@
-const app = require('./app')
+const express = require('express');  // Import express
+const app = require('./app');
 const dotenv = require('dotenv');
-const connectDatabase = require('./config/database')
+const connectDatabase = require('./config/database');
+const path = require('path');
 
-dotenv.config({path: './config/.env'})
+dotenv.config({ path: './config/.env' });
 
+// Serve static files (e.g., images) from the "uploads" directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-//connection for database
-
+// Connection for database
 connectDatabase();
-
 
 const PORT = process.env.PORT || 4001;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
-
-
-// app.listen(process.env.PORT, () => {
-//     console.log(`Server started on Port: ${process.env.PORT} in ${process.env.NODE_ENV} mode.`)
-// })

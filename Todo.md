@@ -47,13 +47,13 @@
 - [] Use FCM push notifications to inform the customer of the updated transaction. 10pts
 
 ### MP1
-- [] Product/Service CRUD bootstrap datatables. Upload multiple photos. 10pts
+- [x] Product/Service CRUD bootstrap datatables. Upload multiple photos. 10pts
 - [] Product/Service CRUD MUI datatables. Upload multiple photos. Expandable/collapsible rows. 15pts
 - [] Product/Service CRUD MUI datatables. Upload multiple photos. Expandable/collapsible rows. Bulk delete using checkboxes. 20pts
 
 ### MP2
-- [] Username and password authentication. 5pts
-- [] User profile update with photo upload. 5pts
+- [x] Username and password authentication. 5pts
+- [x] User profile update with photo upload. 5pts
 - [] Username and password Firebase authentication. 10pts
 - [] User profile update with photo upload using Firebase storage. 10pts
 
@@ -63,7 +63,7 @@
 - [x] Admin can delete a review. 5pts
 
 ### Unit 1
-- [] Filter/mask bad words from reviews using bad-words package. 10pts
+- [x] Filter/mask bad words from reviews using bad-words package. 10pts
 - [] Form validation on product and user forms using YUP, Formik, React Hook Form. 10pts
 
 ### Quizzes
