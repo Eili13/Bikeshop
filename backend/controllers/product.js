@@ -154,7 +154,7 @@ exports.deleteProduct = async (req, res, next) => {
 // Get All Products
 exports.getProducts = async (req, res, next) => {
     try {
-        const resPerpage = 4; // Number of results per page
+        const resPerpage = 11; // Number of results per page
         const apiFeatures = new APIFeatures(Product.find(), req.query)
             .search()
             .filter()

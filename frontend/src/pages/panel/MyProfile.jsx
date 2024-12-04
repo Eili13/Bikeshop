@@ -37,9 +37,23 @@ const MyProfile = () => {
     }
   }, []);
 
+  // Handle the form submission
   const handleSubmit = async () => {
     if (!name || !email || !password) {
       setError("Please fill in all fields.");
+      return;
+    }
+
+    // Simple email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
+    // Password validation
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long.");
       return;
     }
 
